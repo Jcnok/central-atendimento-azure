@@ -198,7 +198,7 @@ az webapp config set \
 az webapp config appsettings set \
   --resource-group central-atendimento-rg \
   --name central-atendimento-api \
-  --settings DATABASE_URL="postgresql://dbadmin:SenhaForte@2025@central-atendimento-db.postgres.database.azure.com:5432/central_atendimento_db"
+  --settings DATABASE_URL="postgresql://dbadmin:Sua SenhaForte@central-atendimento-db.postgres.database.azure.com:5432/central_atendimento_db"
 ```
 
 #### **1.7 Deploy do código (via ZIP)**
@@ -437,8 +437,8 @@ Este projeto está sob a licença MIT. Veja LICENSE para detalhes.
 
 ## 👨‍💻 Autor
 
-**João Nok** - Desenvolvedor Full-stack | Azure | IA  
-LinkedIn: [seu-linkedin]  
+**Julio Okuda** - Desenvolvedor Full-stack | Azure | IA  
+LinkedIn: [Julio Okuda] (https://www.linkedin.com/in/juliookuda/) 
 GitHub: [@Jcnok](https://github.com/Jcnok)
 
 ---
@@ -467,22 +467,3 @@ R: Use Heroku, Railway, Render ou qualquer host que suporte Python/FastAPI.
 ---
 
 **Desenvolvido com ❤️ para o Hackathon Microsoft Innovation Challenge**
-```
-
-***
-
-## **FASE 13: Arquivo de startup.sh (3 min)**
-
-Crie `startup.sh`:
-
-```bash
-#!/bin/bash
-
-# Script de inicialização para Azure App Service
-
-echo "🚀 Iniciando Central de Atendimento Automática..."
-
-# Instalar dependências
-pip install -r requirements.txt
-
-# Inicializar banco de dados
