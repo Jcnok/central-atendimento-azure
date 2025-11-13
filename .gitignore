@@ -1,0 +1,98 @@
+# ==================== SEGURANÇA ====================
+.env
+.env.local
+.env.*.local
+.env.production
+secrets.json
+config.json
+*.key
+*.pem
+*.pfx
+
+# ==================== CREDENCIAIS ====================
+credentials/
+keys/
+secrets/
+.aws/
+.azure/
+.gcp/
+
+# ==================== Python ====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ==================== Virtual Environment ====================
+venv/
+ENV/
+env/
+.venv
+env.bak/
+venv.bak/
+
+# ==================== IDE ====================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# ==================== Database ====================
+db/*.db
+db/*.sqlite
+db/*.sqlite3
+*.db
+*.sqlite
+*.sqlite3
+
+# ==================== Pytest ====================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+dist/
+
+# ==================== Logs ====================
+*.log
+logs/
+*.log.*
+
+# ==================== OS ====================
+.DS_Store
+Thumbs.db
+.directory
+
+# ==================== Deployment ====================
+deploy.zip
+*.zip
+*.tar.gz
+
+# ==================== Node (se usar frontend) ====================
+node_modules/
+.npm
+package-lock.json
+yarn.lock
+
+# ==================== Misc ====================
+.cache/
+.tmp/

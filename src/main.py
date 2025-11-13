@@ -1,0 +1,93 @@
+"""
+Central de Atendimento Automática com IA
+API FastAPI para orquestração de tickets, clientes e automação de atendimento
+Otimizado para Azure App Service com PostgreSQL
+"""
+
+from fastapi import FastAPI, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+import logging
+from src.config.database import init_db, close_db
+from src.routes import clientes_router, chamados_router, metricas_router
+
+# ==================== CONFIGURAÇÃO DE LOGGING ====================
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# ==================== INICIALIZAÇÃO DO FASTAPI ====================
+app = FastAPI(
+    title="Central de Atendimento Automática",
+    description="API para gerenciar atendimento multicanal com IA e automação",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+
+# ==================== CORS ====================
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Para dev. Em produção, especifique domínios
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ==================== EVENTOS ====================
+@app.on_event("startup")
+async def startup_event():
+    """Inicializa banco de dados ao startar a aplicação"""
+    logger.info("🚀 Iniciando aplicação...")
+    init_db()
+    logger.info("✅ Banco de dados inicializado!")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Log ao desligar a aplicação"""
+    logger.info("🛑 Encerrando aplicação...")
+    close_db()  # Adicione esta linha
+
+# ==================== ROTAS ====================
+
+@app.get("/", tags=["Health"])
+async def health_check():
+    """Health check da API"""
+    return {
+        "status": "ok",
+        "servico": "Central de Atendimento Automática",
+        "versao": "1.0.0",
+        "ambiente": "Azure App Service"
+    }
+
+@app.get("/health", tags=["Health"])
+async def health():
+    """Health check simples para Azure"""
+    return {"status": "healthy"}
+
+# ==================== REGISTRO DE ROTAS ====================
+app.include_router(clientes_router)
+app.include_router(chamados_router)
+app.include_router(metricas_router)
+
+# ==================== TRATAMENTO DE ERROS ====================
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    logger.error(f"Erro não tratado: {str(exc)}")
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "erro": "Erro interno do servidor",
+            "detalhes": str(exc)
+        }
+    )
+
+# ==================== ENTRYPOINT ====================
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "src.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info"
+    )
