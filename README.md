@@ -16,6 +16,10 @@ Uma solução completa de atendimento ao cliente, automatizada com IA, capaz de 
 - [API Endpoints](#api-endpoints)
 - [Estrutura de Projeto](#estrutura-de-projeto)
 - [Tecnologias](#tecnologias)
+- [Testes](#testes)
+- [Troubleshooting](#troubleshooting)
+- [Roadmap](#roadmap)
+- [Licença](#licença)
 
 ---
 
@@ -377,12 +381,43 @@ central-atendimento-azure/
 
 ---
 
+## 🛠️ Tecnologias
+
+| Tecnologia | Versão | Descrição |
+|-----------|--------|----------|
+| Python | 3.10+ | Linguagem principal |
+| FastAPI | 0.104+ | Framework web |
+| SQLAlchemy | 2.0+ | ORM |
+| PostgreSQL | 12+ | Banco de dados |
+| Pydantic | 2.5+ | Validação de dados |
+| Gunicorn | 21+ | WSGI Server |
+| Uvicorn | 0.24+ | ASGI Server |
+| Azure App Service | - | Hospedagem cloud |
+
+---
+
 ## 🧪 Testes
 
 ### **Executar testes**
 ```
 pytest tests/ -v
+
 ```
+*** Resultado esperado ***
+```
+===============================================================================
+tests/test_endpoints.py::TestHealthCheck::test_health_check_root PASSED
+tests/test_endpoints.py::TestHealthCheck::test_health_check_health PASSED
+tests/test_endpoints.py::TestClientes::test_criar_cliente PASSED
+tests/test_endpoints.py::TestClientes::test_obter_cliente PASSED
+tests/test_endpoints.py::TestClientes::test_listar_clientes PASSED
+tests/test_endpoints.py::TestChamados::test_criar_chamado_com_resolucao_automatica PASSED
+tests/test_endpoints.py::TestChamados::test_criar_chamado_para_encaminhamento PASSED
+tests/test_endpoints.py::TestMetricas::test_obter_metricas_gerais PASSED
+
+======================== 8 passed in 0.52s ========================
+```
+
 
 ### **Teste individual de endpoint**
 ```
@@ -398,22 +433,157 @@ curl -X POST "http://localhost:8000/chamados/" \
 
 # Ver métricas
 curl "http://localhost:8000/metricas/"
+
+```
+## 🔧 Troubleshooting
+
+### Erro: `ModuleNotFoundError: No module named 'src'`
+
+**Causa:** Tentou rodar script Python diretamente
+**Solução:**
+```bash
+# ❌ ERRADO
+python src/main.py
+
+# ✅ CORRETO
+uvicorn src.main:app --reload
 ```
 
----
+***
 
-## 🛠️ Tecnologias
+### Erro: `ImportError: email-validator is not installed`
 
-| Tecnologia | Versão | Descrição |
-|-----------|--------|----------|
-| Python | 3.10+ | Linguagem principal |
-| FastAPI | 0.104+ | Framework web |
-| SQLAlchemy | 2.0+ | ORM |
-| PostgreSQL | 12+ | Banco de dados |
-| Pydantic | 2.5+ | Validação de dados |
-| Gunicorn | 21+ | WSGI Server |
-| Uvicorn | 0.24+ | ASGI Server |
-| Azure App Service | - | Hospedagem cloud |
+**Causa:** Falta instalar dependência de validação de email
+**Solução:**
+```bash
+pip install email-validator
+```
+
+***
+
+### Erro: `psycopg2.OperationalError: could not translate host name`
+
+**Causa:** DATABASE_URL com formato incorreto ou senha com caracteres especiais
+**Solução:**
+```env
+# ❌ ERRADO
+DATABASE_URL=postgresql://dbadmin:SenhaForte@2025@host.com:5432/db
+
+# ✅ CORRETO
+DATABASE_URL=postgresql://dbadmin:SenhaFortePG2025@host.com:5432/db
+```
+
+***
+
+### Erro: `ResourceNotFound` no Azure
+
+**Causa:** Recurso PostgreSQL não foi criado corretamente
+**Solução:**
+```bash
+# Verificar se existe
+az postgres flexible-server list --resource-group central-atendimento-rg
+
+# Se não existir, criar:
+az postgres flexible-server create \
+  --resource-group central-atendimento-rg \
+  --name central-atendimento-db \
+  --location "Brazil South" \
+  --admin-user dbadmin \
+  --admin-password "SenhaFortePG2025" \
+  --sku-name Standard_B1ms \
+  --storage-size 32
+```
+
+***
+
+### Erro: `Porta 8000 já em uso`
+
+**Causa:** Outra aplicação rodando na mesma porta
+**Solução:**
+```bash
+# Mude a porta
+uvicorn src.main:app --port 8001
+
+# OU mate o processo na porta
+lsof -i :8000
+kill -9 <PID>
+```
+
+***
+
+### Erro: Credenciais expostas no GitHub
+
+**Causa:** Commitou `.env` com credenciais reais
+**Solução:**
+```bash
+# Ver se .env foi commitado
+git log --all -- .env
+
+# Remover do histórico (se necessário)
+git filter-branch --tree-filter 'rm -f .env' HEAD
+
+# Force push (cuidado!)
+git push --force origin main
+
+# Mudar senha no Azure IMEDIATAMENTE
+```
+
+***
+
+## 📈 Roadmap
+
+### v1.0 (Atual) ✅
+- [x] MVP com CRUD básico
+- [x] IA mock para classificação
+- [x] Suporte multicanal (site, WhatsApp, email)
+- [x] Banco PostgreSQL Azure
+- [x] Deploy em Azure App Service
+- [x] Documentação completa
+
+### v1.1 (Próximo)
+- [ ] Integração N8N para workflows customizados
+- [ ] Dashboard React para visualização
+- [ ] Autenticação JWT
+- [ ] Rate limiting
+- [ ] Logs estruturados
+
+### v1.2
+- [ ] Integração Azure Cognitive Services (IA real)
+- [ ] WhatsApp Business API (real)
+- [ ] SendGrid para e-mails automáticos
+- [ ] Slack notifications
+- [ ] Analytics avançado
+
+### v2.0
+- [ ] Multi-tenant architecture
+- [ ] Machine learning para priorização
+- [ ] Integração com CRM (Salesforce, HubSpot)
+- [ ] API GraphQL
+- [ ] Mobile app
+
+***
+
+## 🔐 Segurança
+
+### Boas Práticas Implementadas
+
+✅ **Sem credenciais hardcoded** - Usa variáveis de ambiente  
+✅ **CORS configurado** - Apenas domínios autorizados  
+✅ **SQL Injection protegido** - SQLAlchemy ORM  
+✅ **HTTPS obrigatório** - Em produção na Azure  
+✅ **Rate limiting** - Será adicionado em v1.1  
+✅ **.env no .gitignore** - Nunca comitte credenciais  
+
+### Mudar senha PostgreSQL
+
+```bash
+az postgres flexible-server update \
+  --resource-group central-atendimento-rg \
+  --name central-atendimento-db \
+  --admin-password "NovaSenhaForte2025"
+```
+
+***
 
 ---
 
@@ -443,27 +613,59 @@ GitHub: [@Jcnok](https://github.com/Jcnok)
 
 ---
 
-## ❓ FAQ
+***
 
-**P: Como integro com N8N?**  
-R: Crie um webhook no N8N que recebe dados do endpoint POST `/chamados/` e executa automações customizadas.
+## ❓ FAQ
 
 **P: Posso usar SQLite em vez de PostgreSQL?**  
 R: Sim, mas não é recomendado para produção. Altere `DATABASE_URL` em `.env` para `sqlite:///./db/central.db`.
 
-**P: Como faço deploy sem Azure?**  
-R: Use Heroku, Railway, Render ou qualquer host que suporte Python/FastAPI.
+**P: Como integro com N8N?**  
+R: Crie um webhook no N8N que recebe dados do endpoint POST `/chamados/` e executa automações customizadas.
 
----
+**P: O projeto é escalável?**  
+R: Sim! Azure App Service escala automaticamente, PostgreSQL gerenciado é robusto, e a arquitetura modular permite crescimento.
 
-## 🚀 Roadmap
+**P: Quanto custa rodar isso na Azure?**  
+R: Free Tier inicial inclui muitos recursos. Depois, estima-se ~$10-30/mês conforme uso.
 
-- v1.0: MVP com CRUD básico e IA mock ✅
-- v1.1: Integração N8N
-- v1.2: Dashboard React
-- v1.3: Integração Azure Cognitive Services
-- v2.0: Multi-tenant architecture
+**P: Posso usar em produção?**  
+R: Sim! O código segue boas práticas, mas revise pontos específicos do seu negócio (compliance, backup, logs).
 
----
+**P: Como fazer deploy sem Azure?**  
+R: Use Heroku, Railway, Render ou qualquer host que suporte Python/FastAPI. Basta trocar DATABASE_URL.
 
-**Desenvolvido com ❤️ para o Hackathon Microsoft Innovation Challenge**
+***
+
+## 🤝 Contributing
+
+Contribuições são bem-vindas! Para contribuir:
+
+1. Faça um fork do repositório
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+***
+
+## 📞 Suporte
+
+Encontrou um problema? Abra uma [issue no GitHub](https://github.com/Jcnok/central-atendimento-azure/issues).
+
+***
+
+## 🎓 Recursos Úteis
+
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [SQLAlchemy ORM](https://docs.sqlalchemy.org/)
+- [Azure App Service](https://learn.microsoft.com/en-us/azure/app-service/)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [Pydantic Documentation](https://docs.pydantic.dev/)
+
+***
+
+**Desenvolvido com ❤️ para o Hackathon Microsoft Innovation Challenge 2025**
+
+```
+⭐
