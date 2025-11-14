@@ -1,71 +1,53 @@
 """
-Configuração de conexão com PostgreSQL via SQLAlchemy
-SEGURO: Usa variáveis de ambiente, sem credenciais hardcoded
+Configuração de conexão com PostgreSQL via SQLAlchemy.
+
+Este módulo utiliza as configurações centralizadas do `src.config.settings`
+para criar a engine e a sessão do banco de dados.
 """
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy.pool import NullPool
-import os
-from dotenv import load_dotenv
 import logging
 
-# Carregar variáveis de ambiente
-load_dotenv()
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.pool import NullPool
+
+from src.config.settings import settings
 
 logger = logging.getLogger(__name__)
 
-# ==================== VALIDAÇÃO DE CREDENCIAIS ====================
-
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-# Validar se DATABASE_URL está definida
-if not DATABASE_URL:
-    raise ValueError(
-        "❌ ERRO CRÍTICO: Variável DATABASE_URL não está definida!\n"
-        "Por favor, defina a variável de ambiente DATABASE_URL com a string de conexão.\n"
-        "Exemplo: postgresql://user:password@host:port/database\n"
-        "Verifique o arquivo .env ou as variáveis de ambiente do seu sistema."
-    )
-
-# Validar formato mínimo
-if not DATABASE_URL.startswith("postgresql://"):
-    logger.warning("⚠️  DATABASE_URL não parece ser uma conexão PostgreSQL válida")
-
-# ==================== SQLALCHEMY ENGINE ====================
+# ===================== ENGINE SQLALCHEMY =====================
 
 try:
+    # A URL do banco de dados é convertida para string para o create_engine
     engine = create_engine(
-        DATABASE_URL,
-        poolclass=NullPool,  # Importante para Azure (conexões limitadas em tier free)
-        echo=False,  # Mude para True apenas em desenvolvimento para debug
+        str(settings.DATABASE_URL),
+        poolclass=NullPool,  # Para conexão limitada (ex: Azure free tier)
+        echo=False,  # Mude para True só se quiser verbose dos comandos SQL
         connect_args={
             "connect_timeout": 10,
-            "application_name": "central-atendimento-api"
-        }
+            "application_name": "central-atendimento-api",
+        },
     )
-    logger.info("✅ Engine SQLAlchemy criado com sucesso")
+    logger.info("✅ Engine SQLAlchemy criada com sucesso")
 except Exception as e:
     logger.error(f"❌ Erro ao criar engine: {str(e)}")
     raise
 
-# ==================== SESSION FACTORY ====================
+# ===================== SESSION FACTORY =====================
 
 SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine,
-    expire_on_commit=False
+    autocommit=False, autoflush=False, bind=engine, expire_on_commit=False
 )
 
 Base = declarative_base()
 
-# ==================== DEPENDENCY ====================
+# ===================== DEPENDENCY FASTAPI =====================
+
 
 def get_db():
     """
-    Dependency para injetar sessão no FastAPI
-    Garante que a sessão é fechada após cada requisição
+    Dependência para injeção de sessão nas rotas FastAPI
+    Garante fechamento seguro e rollback em caso de erro
     """
     db = SessionLocal()
     try:
@@ -77,21 +59,28 @@ def get_db():
     finally:
         db.close()
 
-# ==================== INICIALIZAÇÃO ====================
+
+# ===================== INICIALIZAÇÃO E FINALIZAÇÃO =====================
+
 
 def init_db():
     """
-    Cria todas as tabelas no banco de dados
-    Chamada automaticamente no startup da aplicação
+    Cria todas as tabelas definidas em Base no banco de dados atual.
+    Usar no startup da aplicação (ex: eventos FastAPI).
+    SEGURANÇA: Funciona no banco selecionado pelo ambiente (.env)
     """
     try:
         Base.metadata.create_all(bind=engine)
-        logger.info("✅ Tabelas do banco de dados criadas/validadas com sucesso")
+        logger.info("✅ Tabelas criadas/validadas com sucesso")
     except Exception as e:
-        logger.error(f"❌ Erro ao inicializar banco: {str(e)}")
+        logger.error(f"❌ Erro ao criar tabelas: {str(e)}")
         raise
 
+
 def close_db():
-    """Fecha todas as conexões (usar no shutdown da app)"""
+    """
+    Fecha todas as conexões com o banco.
+    Usar no shutdown da aplicação.
+    """
     engine.dispose()
-    logger.info("✅ Conexões do banco fechadas")
+    logger.info("✅ Conexões fechadas")

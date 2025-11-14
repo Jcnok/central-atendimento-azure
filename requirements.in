@@ -1,0 +1,18 @@
+# Framework e Servidores
+fastapi
+gunicorn
+uvicorn
+
+# Banco de Dados
+sqlalchemy
+psycopg2-binary
+
+# Validação e Configuração
+pydantic
+pydantic-settings
+email-validator
+python-dotenv
+
+# Testes
+pytest
+pytest-asyncio

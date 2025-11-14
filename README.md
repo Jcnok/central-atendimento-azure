@@ -1,671 +1,251 @@
 # 🎯 Central de Atendimento Automática com IA
 
-Uma solução completa de atendimento ao cliente, automatizada com IA, capaz de processar múltiplos canais (site, WhatsApp, e-mail) e resolver solicitações automaticamente ou encaminhar para análise humana.
+![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green?logo=fastapi)
+![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-red.svg)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-12+-blue.svg?logo=postgresql)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+
+Uma API de back-end robusta para uma central de atendimento, capaz de processar solicitações de múltiplos canais com classificação e resposta por IA.
 
 **Desenvolvido para o Hackathon Microsoft Innovation Challenge - Novembro 2025**
 
 ---
 
 ## 📋 Sumário
-- [Visão Geral](#visão-geral)
-- [Arquitetura](#arquitetura)
-- [Pré-requisitos](#pré-requisitos)
-- [Instalação Local](#instalação-local)
-- [Variáveis de Ambiente](#variáveis-de-ambiente)
-- [Deploy na Azure](#deploy-na-azure)
-- [API Endpoints](#api-endpoints)
-- [Estrutura de Projeto](#estrutura-de-projeto)
-- [Tecnologias](#tecnologias)
-- [Testes](#testes)
-- [Troubleshooting](#troubleshooting)
-- [Roadmap](#roadmap)
-- [Licença](#licença)
+- [Visão Geral](#-visão-geral)
+- [Tecnologias](#-tecnologias)
+- [Arquitetura](#-arquitetura)
+- [Começando](#-começando)
+- [Variáveis de Ambiente](#-variáveis-de-ambiente)
+- [Estrutura do Projeto](#-estrutura-do-projeto)
+- [Testes](#-testes)
+- [Documentação da API](#-documentação-da-api)
+- [Deploy na Azure](#-deploy-na-azure)
+- [Roadmap](#-roadmap)
+- [Licença e Contato](#-licença-e-contato)
 
 ---
 
 ## 🌟 Visão Geral
 
-### Problema
-Empresas recebem múltiplos canais de atendimento (site, WhatsApp, e-mail) e precisam de soluções escaláveis para:
-- Processar solicitações 24/7
-- Responder dúvidas frequentes automaticamente
-- Classificar e priorizar chamados complexos
-- Reduzir tempo de resposta e custos operacionais
+Este projeto oferece uma solução escalável para empresas que lidam com um alto volume de solicitações de clientes em diversos canais (site, WhatsApp, e-mail).
 
-### Solução
-Um orquestrador multicanal que:
-- ✅ Recebe solicitações de diversos canais  
-- ✅ Classifica com IA em tempo real  
-- ✅ Responde automaticamente dúvidas simples  
-- ✅ Encaminha casos complexos para análise humana  
-- ✅ Registra métricas e histórico completo
+#### O Problema
 
----
+-   Processamento manual e lento de solicitações.
+-   Dificuldade em oferecer suporte 24/7.
+-   Custos operacionais elevados com atendimento humano para dúvidas repetitivas.
 
----
+#### A Solução
 
-## 🏗️ Arquitetura
-
-```
-┌─────────────────────────────────────────────┐
-│         Frontend (React/Dashboard)          │
-│   (Simulação de múltiplos canais)           │
-└──────────────┬──────────────────────────────┘
-               │ HTTP POST
-               ▼
-┌─────────────────────────────────────────────┐
-│    Azure App Service (FastAPI)              │
-│    - API Gateway                            │
-│    - Processamento de requisições           │
-└──────────────┬──────────────────────────────┘
-               │
-      ┌────────┴──────────┐
-      ▼                   ▼
-┌──────────────────┐  ┌──────────────────┐
-│  IA Classifier   │  │  PostgreSQL DB   │
-│  (Classificação) │  │  (Tickets/Dados) │
-└──────────────────┘  └──────────────────┘
-      │
-      ▼
-┌─────────────────────────────────────┐
-│   N8N (Orquestração/Workflows)      │
-│   - Triagem automática              │
-│   - Encaminhamento para humano      │
-│   - Integrações externas            │
-└─────────────────────────────────────┘
-```
-
-**Stack Técnico:**
-- **Backend:** FastAPI (Python)
-- **Database:** PostgreSQL (Azure Database for PostgreSQL)
-- **Cloud:** Azure App Service
-- **Automação:** N8N (opcional, para workflows avançados)
-- **IA/NLP:** Mock de classificação (integrável com Azure Cognitive Services)
-
----
-
-## 📦 Pré-requisitos
-
-- Python 3.10+
-- pip ou Poetry
-- Git
-- Conta Azure (com acesso a criar recursos)
-- PostgreSQL instalado localmente (opcional, para testes)
-
----
-
-## 🚀 Instalação Local
-
-### **Passo 1: Clone o repositório**
-```
-git clone https://github.com/Jcnok/central-atendimento-azure.git
-cd central-atendimento-azure
-```
-
-### **Passo 2: Crie um ambiente virtual**
-```
-python -m venv venv
-source venv/bin/activate  # No Windows: venv\Scripts\activate
-```
-
-### **Passo 3: Instale as dependências**
-```
-pip install -r requirements.txt
-```
-
-### **Passo 4: Configure as variáveis de ambiente**
-```
-cp .env.example .env
-# Edite o arquivo .env com suas credenciais PostgreSQL
-```
-
-### **Passo 5: Execute as migrações (criar tabelas)**
-```
-python -c "from src.config.database import init_db; init_db()"
-```
-
-### **Passo 6: Inicie a aplicação**
-```
-python src/main.py
-```
-
-### **Passo 7: Acesse a documentação interativa**
-```
-http://localhost:8000/docs
-```
-
----
-
-## 🔐 Variáveis de Ambiente
-
-Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
-
-```
-# Database PostgreSQL (Azure ou local)
-DATABASE_URL=postgresql://dbadmin:SEU_PASSWORD_AQUI@central-atendimento-db.postgres.database.azure.com:5432/central_atendimento_db
-
-# Aplicação
-APP_ENV=development
-APP_DEBUG=True
-APP_HOST=0.0.0.0
-APP_PORT=8000
-
-# Azure (opcional, para integração com serviços Azure)
-AZURE_COGNITIVE_KEY=sua_chave_aqui
-AZURE_COGNITIVE_ENDPOINT=https://seu-endpoint.cognitiveservices.azure.com/
-```
-
----
-
-## ☁️ Deploy na Azure
-
-### **Opção 1: Deploy via Azure CLI (Recomendado)**
-
-#### **1.1 Gere o requirements.txt**
-```
-pip freeze > requirements.txt
-```
-
-#### **1.2 Crie um Resource Group**
-```
-az group create --name central-atendimento-rg --location "Brazil South"
-```
-
-#### **1.3 Crie o App Service Plan (Free Tier)**
-```
-az appservice plan create \
-  --name central-atendimento-plan \
-  --resource-group central-atendimento-rg \
-  --sku F1 \
-  --is-linux
-```
-
-#### **1.4 Crie a Web App**
-```
-az webapp create \
-  --resource-group central-atendimento-rg \
-  --plan central-atendimento-plan \
-  --name central-atendimento-api \
-  --runtime "PYTHON|3.12"
-```
-
-#### **1.5 Configure o Startup Command**
-```
-az webapp config set \
-  --resource-group central-atendimento-rg \
-  --name central-atendimento-api \
-  --startup-file "gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.main:app"
-```
-
-#### **1.6 Defina as variáveis de ambiente**
-```
-az webapp config appsettings set \
-  --resource-group central-atendimento-rg \
-  --name central-atendimento-api \
-  --settings DATABASE_URL="postgresql://dbadmin:Sua SenhaForte@central-atendimento-db.postgres.database.azure.com:5432/central_atendimento_db"
-```
-
-#### **1.7 Deploy do código (via ZIP)**
-```
-# Crie um ZIP com o projeto
-zip -r deploy.zip src/ requirements.txt .env
-
-# Faça deploy
-az webapp deployment source config-zip \
-  --resource-group central-atendimento-rg \
-  --name central-atendimento-api \
-  --src-path deploy.zip
-```
-
-Sua API estará disponível em:
-```
-https://central-atendimento-api.azurewebsites.net
-```
-
-### **Opção 2: Deploy via GitHub Actions (Automático)**
-
-Crie `.github/workflows/deploy.yml`:
-
-```
-name: Deploy to Azure
-
-on:
-  push:
-    branches: [ main ]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v2
-    
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.12'
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    
-    - name: Deploy to Azure
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: central-atendimento-api
-        publish-profile: ${{ secrets.AZURE_PUBLISHPROFILE }}
-        package: .
-```
-
----
-
-## 📡 API Endpoints
-
-### **Health Check**
-- `GET /` - Verifica saúde da API
-- `GET /health` - Health check simples
-
-### **Clientes**
-- `POST /clientes/` - Criar novo cliente
-- `GET /clientes/{cliente_id}` - Obter cliente
-- `GET /clientes/` - Listar clientes (com paginação)
-
-**Exemplo de requisição:**
-```
-curl -X POST "http://localhost:8000/clientes/" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "nome": "João Silva",
-    "email": "joao@example.com",
-    "telefone": "11999999999",
-    "canal_preferido": "whatsapp"
-  }'
-```
-
-### **Chamados (Tickets)**
-- `POST /chamados/` - Criar novo chamado (com IA automática!)
-- `GET /chamados/{chamado_id}` - Obter chamado
-- `GET /chamados/` - Listar chamados (com filtros)
-- `PUT /chamados/{chamado_id}` - Atualizar status
-- `GET /chamados/cliente/{cliente_id}` - Listar chamados por cliente
-
-**Exemplo de requisição:**
-```
-curl -X POST "http://localhost:8000/chamados/" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "cliente_id": 1,
-    "canal": "whatsapp",
-    "mensagem": "Gostaria de uma segunda via do boleto"
-  }'
-```
-
-**Resposta esperada:**
-```
-{
-  "chamado_id": 1,
-  "cliente_id": 1,
-  "canal": "whatsapp",
-  "resposta": "📄 Clique aqui para acessar suas faturas e segunda via de boletos.",
-  "resolvido_automaticamente": true,
-  "prioridade": "baixa",
-  "encaminhado_para_humano": false,
-  "data_criacao": "2025-11-12T20:45:30.123456"
-}
-```
-
-### **Métricas**
-- `GET /metricas/` - Métricas gerais
-- `GET /metricas/por-canal` - Métricas por canal
-- `GET /metricas/por-status` - Distribuição por status
-
-**Exemplo de resposta:**
-```
-{
-  "total_chamados": 42,
-  "total_clientes": 15,
-  "chamados_resolvidos_automaticamente": 35,
-  "chamados_encaminhados_para_humano": 7,
-  "taxa_resolucao_automatica": "83.3%",
-  "tempo_medio_resposta_segundos": "< 1s"
-}
-```
-
----
-
-## 📁 Estrutura de Projeto
-
-```
-central-atendimento-azure/
-├── src/
-│   ├── __init__.py
-│   ├── main.py                    # App FastAPI principal
-│   ├── config/
-│   │   ├── __init__.py
-│   │   └── database.py            # Conexão PostgreSQL + SQLAlchemy
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── cliente.py             # ORM Cliente
-│   │   ├── chamado.py             # ORM Chamado
-│   │   └── metrica.py             # ORM Métrica
-│   ├── schemas/
-│   │   ├── __init__.py
-│   │   ├── cliente.py             # Schemas Pydantic Cliente
-│   │   └── chamado.py             # Schemas Pydantic Chamado
-│   ├── routes/
-│   │   ├── __init__.py
-│   │   ├── clientes.py            # Endpoints /clientes
-│   │   ├── chamados.py            # Endpoints /chamados
-│   │   └── metricas.py            # Endpoints /metricas
-│   ├── services/
-│   │   ├── __init__.py
-│   │   └── ia_classifier.py       # Lógica de IA/Classificação
-│   └── utils/
-│       ├── __init__.py
-│       └── logger.py              # Configuração de logging
-├── tests/
-│   ├── __init__.py
-│   └── test_endpoints.py          # Testes unitários
-├── db/
-│   └── .gitkeep                   # Pasta para migrations (se needed)
-├── .github/
-│   └── workflows/
-│       └── deploy.yml             # CI/CD GitHub Actions
-├── requirements.txt               # Dependências Python
-├── .env.example                   # Template de variáveis
-├── .gitignore                     # Arquivos a ignorar
-├── README.md                      # Este arquivo
-└── startup.sh                     # Script de inicialização (opcional)
-```
+Um orquestrador de atendimento que automatiza o fluxo de trabalho:
+-   ✅ **Recebe** solicitações de múltiplos canais.
+-   ✅ **Classifica** a intenção do cliente com IA em tempo real.
+-   ✅ **Responde** automaticamente a dúvidas frequentes (ex: segunda via de boleto).
+-   ✅ **Encaminha** casos complexos e priorizados para análise humana.
+-   ✅ **Gera métricas** sobre os atendimentos para análise de performance.
 
 ---
 
 ## 🛠️ Tecnologias
 
-| Tecnologia | Versão | Descrição |
-|-----------|--------|----------|
-| Python | 3.10+ | Linguagem principal |
-| FastAPI | 0.104+ | Framework web |
-| SQLAlchemy | 2.0+ | ORM |
-| PostgreSQL | 12+ | Banco de dados |
-| Pydantic | 2.5+ | Validação de dados |
-| Gunicorn | 21+ | WSGI Server |
-| Uvicorn | 0.24+ | ASGI Server |
-| Azure App Service | - | Hospedagem cloud |
+| Área | Tecnologia | Versão/Descrição |
+| :--- | :--- | :--- |
+| **Linguagem** | Python | 3.10+ |
+| **Framework Web** | FastAPI | ASGI, alta performance |
+| **Banco de Dados** | PostgreSQL | Banco de dados relacional |
+| **ORM** | SQLAlchemy | v2.0, para manipulação de dados segura|
+| **Validação**| Pydantic | v2, para validação e configurações |
+| **Servidor** | Uvicorn & Gunicorn| Servidores ASGI/WSGI para dev/prod |
+| **Testes** | Pytest | Testes automatizados com BD em memória |
+| **Cloud** | Azure App Service | Hospedagem da aplicação |
+
+---
+
+## 🏗️ Arquitetura
+
+A arquitetura segue um padrão de camadas desacoplado, facilitando a manutenção e a escalabilidade.
+
+```
+┌──────────────────────────────────┐
+│         Canais de Entrada        │
+│    (Frontend, WhatsApp, etc.)    │
+└──────────────┬───────────────────┘
+               │ HTTP POST
+               ▼
+┌──────────────────────────────────┐
+│     Azure App Service (FastAPI)  │
+│     - API Gateway                │
+│     - Lógica de Negócio          │
+└──────────────┬───────────────────┘
+      ┌────────┴─────────┐
+      ▼                  ▼
+┌────────────────┐   ┌─────────────────┐
+│ IA Classifier  │   │   PostgreSQL DB │
+│ (Classificação)│   │  (Azure/Local)  │
+└────────────────┘   └─────────────────┘
+```
+---
+
+## 🚀 Começando
+
+Siga os passos abaixo para ter o projeto rodando localmente em poucos minutos.
+
+#### 1. Pré-requisitos
+
+-   [Python 3.10+](https://www.python.org/)
+-   [Git](https://git-scm.com/)
+-   Um servidor PostgreSQL rodando (localmente ou na nuvem).
+
+#### 2. Instalação
+
+```bash
+# Clone o repositório
+git clone https://github.com/Jcnok/central-atendimento-azure.git
+cd central-atendimento-azure
+
+# Crie e ative um ambiente virtual
+python -m venv venv
+source venv/bin/activate  # No Windows: venv\Scripts\activate
+
+# Instale as dependências
+pip install -r requirements.txt
+```
+
+#### 3. Configuração
+
+```bash
+# Copie o arquivo de exemplo de variáveis de ambiente
+cp .env.example .env
+
+# Edite o arquivo .env e configure sua DATABASE_URL
+# Exemplo para banco local:
+# DATABASE_URL=postgresql://user:password@localhost:5432/nome_do_banco
+```
+
+#### 4. Execução
+
+```bash
+# Inicie a aplicação em modo de desenvolvimento
+uvicorn src.main:app --reload
+```
+
+A aplicação estará disponível em `http://127.0.0.1:8000`.
+
+**Nota:** As tabelas do banco de dados são criadas automaticamente na inicialização da aplicação. O comando manual `init_db()` não é mais necessário.
+
+---
+
+## 🔐 Variáveis de Ambiente
+
+As configurações da aplicação são gerenciadas via variáveis de ambiente através de um arquivo `.env`.
+
+| Variável | Descrição | Exemplo |
+| :--- | :--- | :--- |
+| **`DATABASE_URL`** | **(Obrigatório)** String de conexão com o PostgreSQL. | `postgresql://user:pass@host:port/db` |
+| `APP_ENV` | Ambiente da aplicação. | `development` |
+| `APP_DEBUG` | Ativa o modo debug. | `False` |
+| `APP_HOST` | Host para o servidor Uvicorn. | `0.0.0.0` |
+| `APP_PORT` | Porta para o servidor Uvicorn. | `8000` |
+| `AZURE_COGNITIVE_KEY` | (Opcional) Chave da API do Azure Cognitive Services. | `sua_chave_aqui` |
+| `AZURE_COGNITIVE_ENDPOINT` | (Opcional) Endpoint do Azure Cognitive Services. | `https://seu-endpoint.cognitiveservices.azure.com/` |
+
+---
+
+## 📁 Estrutura do Projeto
+
+A estrutura do código é organizada por responsabilidades para facilitar a manutenção.
+
+```
+central-atendimento-azure/
+├── src/
+│   ├── main.py                # Ponto de entrada da aplicação FastAPI e Lifespan
+│   ├── config/
+│   │   ├── database.py        # Configuração da engine e sessão SQLAlchemy
+│   │   └── settings.py        # Configurações Pydantic (carregadas do .env)
+│   ├── models/                # Modelos ORM do SQLAlchemy (tabelas)
+│   ├── schemas/               # Schemas Pydantic (validação de dados da API)
+│   ├── routes/                # Endpoints da API (rotas)
+│   └── services/              # Lógica de negócio (ex: classificação com IA)
+├── tests/
+│   └── test_endpoints.py      # Testes de integração com BD em memória
+├── .github/
+│   └── workflows/
+│       └── deploy.yml         # Exemplo de workflow de CI/CD para Azure
+├── requirements.in            # Dependências diretas do projeto
+├── requirements.txt           # Dependências travadas (gerado por pip-tools)
+├── pyproject.toml             # Configuração de ferramentas (Black, Ruff)
+└── .env.example               # Arquivo de exemplo para variáveis de ambiente
+```
 
 ---
 
 ## 🧪 Testes
 
-### **Executar testes**
-```
-pytest tests/ -v
+O projeto utiliza **Pytest** para testes automatizados. Os testes rodam em um banco de dados **SQLite em memória**, garantindo que sejam rápidos e não afetem os dados de desenvolvimento.
 
-```
-*** Resultado esperado ***
-```
-===============================================================================
-tests/test_endpoints.py::TestHealthCheck::test_health_check_root PASSED
-tests/test_endpoints.py::TestHealthCheck::test_health_check_health PASSED
-tests/test_endpoints.py::TestClientes::test_criar_cliente PASSED
-tests/test_endpoints.py::TestClientes::test_obter_cliente PASSED
-tests/test_endpoints.py::TestClientes::test_listar_clientes PASSED
-tests/test_endpoints.py::TestChamados::test_criar_chamado_com_resolucao_automatica PASSED
-tests/test_endpoints.py::TestChamados::test_criar_chamado_para_encaminhamento PASSED
-tests/test_endpoints.py::TestMetricas::test_obter_metricas_gerais PASSED
+Para executar a suíte de testes:
 
-======================== 8 passed in 0.52s ========================
-```
-
-
-### **Teste individual de endpoint**
-```
-# Criar cliente
-curl -X POST "http://localhost:8000/clientes/" \
-  -H "Content-Type: application/json" \
-  -d '{"nome":"Test","email":"test@example.com","telefone":"11999999999"}'
-
-# Criar chamado
-curl -X POST "http://localhost:8000/chamados/" \
-  -H "Content-Type: application/json" \
-  -d '{"cliente_id":1,"canal":"site","mensagem":"segunda via boleto"}'
-
-# Ver métricas
-curl "http://localhost:8000/metricas/"
-
-```
-## 🔧 Troubleshooting
-
-### Erro: `ModuleNotFoundError: No module named 'src'`
-
-**Causa:** Tentou rodar script Python diretamente
-**Solução:**
 ```bash
-# ❌ ERRADO
-python src/main.py
-
-# ✅ CORRETO
-uvicorn src.main:app --reload
+pytest
 ```
 
-***
+---
 
-### Erro: `ImportError: email-validator is not installed`
+## 📡 Documentação da API
 
-**Causa:** Falta instalar dependência de validação de email
-**Solução:**
-```bash
-pip install email-validator
+Este projeto utiliza os recursos de documentação automática do FastAPI. Ao iniciar a aplicação, duas interfaces de documentação interativa ficam disponíveis:
+
+-   **Swagger UI:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+-   **ReDoc:** [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+
+Essas interfaces são a **fonte primária de verdade** para todos os endpoints, schemas e exemplos de uso.
+
+<details>
+<summary>Clique para ver um resumo dos endpoints principais</summary>
+
+-   `GET /`: Health check da API.
+-   `POST /clientes/`: Cria um novo cliente.
+-   `GET /clientes/{id}`: Obtém um cliente específico.
+-   `POST /chamados/`: Cria um novo chamado (com classificação automática de IA).
+-   `GET /chamados/{id}`: Obtém um chamado específico.
+-   `GET /chamados/`: Lista chamados com filtros.
+-   `GET /metricas/`: Obtém métricas gerais de atendimento.
+
+</details>
+
+---
+
+## ☁️ Deploy na Azure
+
+O projeto está pronto para deploy no **Azure App Service**.
+
+#### Comando de Inicialização para Produção
+
+O App Service deve ser configurado com o seguinte comando de inicialização:
+```
+gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.main:app
 ```
 
-***
+#### Exemplo de Workflow com GitHub Actions
 
-### Erro: `psycopg2.OperationalError: could not translate host name`
+O arquivo `.github/workflows/deploy.yml` contém um exemplo de pipeline de CI/CD para fazer o deploy automático no Azure a cada push na branch `main`. Para usá-lo, você precisará configurar o secret `AZURE_PUBLISHPROFILE` no seu repositório GitHub.
 
-**Causa:** DATABASE_URL com formato incorreto ou senha com caracteres especiais
-**Solução:**
-```env
-# ❌ ERRADO
-DATABASE_URL=postgresql://dbadmin:SenhaForte@2025@host.com:5432/db
-
-# ✅ CORRETO
-DATABASE_URL=postgresql://dbadmin:SenhaFortePG2025@host.com:5432/db
-```
-
-***
-
-### Erro: `ResourceNotFound` no Azure
-
-**Causa:** Recurso PostgreSQL não foi criado corretamente
-**Solução:**
-```bash
-# Verificar se existe
-az postgres flexible-server list --resource-group central-atendimento-rg
-
-# Se não existir, criar:
-az postgres flexible-server create \
-  --resource-group central-atendimento-rg \
-  --name central-atendimento-db \
-  --location "Brazil South" \
-  --admin-user dbadmin \
-  --admin-password "SenhaFortePG2025" \
-  --sku-name Standard_B1ms \
-  --storage-size 32
-```
-
-***
-
-### Erro: `Porta 8000 já em uso`
-
-**Causa:** Outra aplicação rodando na mesma porta
-**Solução:**
-```bash
-# Mude a porta
-uvicorn src.main:app --port 8001
-
-# OU mate o processo na porta
-lsof -i :8000
-kill -9 <PID>
-```
-
-***
-
-### Erro: Credenciais expostas no GitHub
-
-**Causa:** Commitou `.env` com credenciais reais
-**Solução:**
-```bash
-# Ver se .env foi commitado
-git log --all -- .env
-
-# Remover do histórico (se necessário)
-git filter-branch --tree-filter 'rm -f .env' HEAD
-
-# Force push (cuidado!)
-git push --force origin main
-
-# Mudar senha no Azure IMEDIATAMENTE
-```
-
-***
+---
 
 ## 📈 Roadmap
 
-### v1.0 (Atual) ✅
-- [x] MVP com CRUD básico
-- [x] IA mock para classificação
-- [x] Suporte multicanal (site, WhatsApp, email)
-- [x] Banco PostgreSQL Azure
-- [x] Deploy em Azure App Service
-- [x] Documentação completa
-
-### v1.1 (Próximo)
-- [ ] Integração N8N para workflows customizados
-- [ ] Dashboard React para visualização
-- [ ] Autenticação JWT
-- [ ] Rate limiting
-- [ ] Logs estruturados
-
-### v1.2
-- [ ] Integração Azure Cognitive Services (IA real)
-- [ ] WhatsApp Business API (real)
-- [ ] SendGrid para e-mails automáticos
-- [ ] Slack notifications
-- [ ] Analytics avançado
-
-### v2.0
-- [ ] Multi-tenant architecture
-- [ ] Machine learning para priorização
-- [ ] Integração com CRM (Salesforce, HubSpot)
-- [ ] API GraphQL
-- [ ] Mobile app
-
-***
-
-## 🔐 Segurança
-
-### Boas Práticas Implementadas
-
-✅ **Sem credenciais hardcoded** - Usa variáveis de ambiente  
-✅ **CORS configurado** - Apenas domínios autorizados  
-✅ **SQL Injection protegido** - SQLAlchemy ORM  
-✅ **HTTPS obrigatório** - Em produção na Azure  
-✅ **Rate limiting** - Será adicionado em v1.1  
-✅ **.env no .gitignore** - Nunca comitte credenciais  
-
-### Mudar senha PostgreSQL
-
-```bash
-az postgres flexible-server update \
-  --resource-group central-atendimento-rg \
-  --name central-atendimento-db \
-  --admin-password "NovaSenhaForte2025"
-```
-
-***
+-   [ ] **v1.1**: Integração com N8N para workflows, Dashboard em React, Autenticação JWT.
+-   [ ] **v1.2**: Integração real com **Azure Cognitive Services**, WhatsApp Business API, SendGrid.
+-   [ ] **v2.0**: Arquitetura multi-tenant, ML para priorização, integração com CRMs.
 
 ---
 
-## 🔗 Integrações Futuras
+## 📝 Licença e Contato
 
-- [ ] **Azure Cognitive Services** para NLP avançado
-- [ ] **N8N** para workflows customizados
-- [ ] **WhatsApp Business API** para integração real
-- [ ] **SendGrid** para e-mails automáticos
-- [ ] **Slack** para notificações
-- [ ] **Dashboard React** para visualização
-- [ ] **Auth0** para autenticação
+Este projeto está sob a licença MIT.
 
----
-
-## 📝 Licença
-
-Este projeto está sob a licença MIT. Veja LICENSE para detalhes.
-
----
-
-## 👨‍💻 Autor
-
-**Julio Okuda** - Desenvolvedor Full-stack | Azure | IA  
-LinkedIn: [Julio Okuda] (https://www.linkedin.com/in/juliookuda/) 
-GitHub: [@Jcnok](https://github.com/Jcnok)
-
----
-
-***
-
-## ❓ FAQ
-
-**P: Posso usar SQLite em vez de PostgreSQL?**  
-R: Sim, mas não é recomendado para produção. Altere `DATABASE_URL` em `.env` para `sqlite:///./db/central.db`.
-
-**P: Como integro com N8N?**  
-R: Crie um webhook no N8N que recebe dados do endpoint POST `/chamados/` e executa automações customizadas.
-
-**P: O projeto é escalável?**  
-R: Sim! Azure App Service escala automaticamente, PostgreSQL gerenciado é robusto, e a arquitetura modular permite crescimento.
-
-**P: Quanto custa rodar isso na Azure?**  
-R: Free Tier inicial inclui muitos recursos. Depois, estima-se ~$10-30/mês conforme uso.
-
-**P: Posso usar em produção?**  
-R: Sim! O código segue boas práticas, mas revise pontos específicos do seu negócio (compliance, backup, logs).
-
-**P: Como fazer deploy sem Azure?**  
-R: Use Heroku, Railway, Render ou qualquer host que suporte Python/FastAPI. Basta trocar DATABASE_URL.
-
-***
-
-## 🤝 Contributing
-
-Contribuições são bem-vindas! Para contribuir:
-
-1. Faça um fork do repositório
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
-
-***
-
-## 📞 Suporte
-
-Encontrou um problema? Abra uma [issue no GitHub](https://github.com/Jcnok/central-atendimento-azure/issues).
-
-***
-
-## 🎓 Recursos Úteis
-
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [SQLAlchemy ORM](https://docs.sqlalchemy.org/)
-- [Azure App Service](https://learn.microsoft.com/en-us/azure/app-service/)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [Pydantic Documentation](https://docs.pydantic.dev/)
-
-***
-
-**Desenvolvido com ❤️ para o Hackathon Microsoft Innovation Challenge 2025**
-
-```
-⭐
+Desenvolvido por **Julio Okuda**.
+-   **LinkedIn:** [linkedin.com/in/juliookuda](https://www.linkedin.com/in/juliookuda/)
+-   **GitHub:** [@Jcnok](https://github.com/Jcnok)
