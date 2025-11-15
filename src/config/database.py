@@ -63,6 +63,11 @@ def get_db():
 # ===================== INICIALIZAÇÃO E FINALIZAÇÃO =====================
 
 
+from src.models.user import User  # noqa
+from src.models.cliente import Cliente  # noqa
+from src.models.chamado import Chamado  # noqa
+
+
 def init_db():
     """
     Cria todas as tabelas definidas em Base no banco de dados atual.

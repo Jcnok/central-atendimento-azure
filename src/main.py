@@ -12,7 +12,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from src.config.database import close_db, init_db
-from src.routes import chamados_router, clientes_router, metricas_router
+from src.routes.auth import router as auth_router
+from src.routes.chamados import router as chamados_router
+from src.routes.clientes import router as clientes_router
+from src.routes.metricas import router as metricas_router
 
 # ==================== CONFIGURAÇÃO DE LOGGING ====================
 logging.basicConfig(level=logging.INFO)
@@ -37,7 +40,7 @@ async def lifespan(app: FastAPI):
 # ==================== INICIALIZAÇÃO DO FASTAPI ====================
 app = FastAPI(
     title="Central de Atendimento Automática",
-    description="API para gerenciar atendimento multicanal com IA e automação",
+    description="API para gerenciar atendimento multicanal com IA e automação. Acesso protegido por autenticação JWT.",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -75,6 +78,7 @@ async def health():
 
 
 # ==================== REGISTRO DE ROTAS ====================
+app.include_router(auth_router)
 app.include_router(clientes_router)
 app.include_router(chamados_router)
 app.include_router(metricas_router)

@@ -6,59 +6,10 @@ isolamento, segurança e velocidade.
 
 import uuid
 
-import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
-from src.config.database import Base, get_db
 from src.main import app
-
-# ================== CONFIGURAÇÃO DO BANCO DE DADOS DE TESTE ==================
-
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},  # Necessário para SQLite
-    poolclass=StaticPool,  # Recomendado para banco em memória
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-# ================== SOBRESCRITA DA DEPENDÊNCIA DO BANCO ==================
-
-
-def override_get_db():
-    """
-    Dependência de banco de dados para ser usada durante os testes.
-    Fornece uma sessão do banco de dados em memória.
-    """
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-# Aplica a sobrescrita na aplicação FastAPI
-app.dependency_overrides[get_db] = override_get_db
-
-
-# ================== FIXTURE DE SETUP DO BANCO ==================
-
-
-@pytest.fixture(scope="function")
-def db_session():
-    """
-    Fixture que cria as tabelas antes de cada teste e as derruba depois.
-    Garante que cada teste rode em um estado limpo.
-    """
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
-
+from src.models.chamado import Chamado
 
 client = TestClient(app)
 
@@ -79,7 +30,8 @@ class TestHealthCheck:
 
 
 class TestClientes:
-    def test_criar_cliente(self, db_session):
+    def test_criar_cliente(self, auth_token):
+        headers = {"Authorization": f"Bearer {auth_token}"}
         email_unico = f"joao_{uuid.uuid4().hex}@example.com"
         response = client.post(
             "/clientes/",
@@ -89,11 +41,13 @@ class TestClientes:
                 "telefone": "11999999999",
                 "canal_preferido": "whatsapp",
             },
+            headers=headers,
         )
         assert response.status_code == 201
         assert isinstance(response.json()["id"], int)
 
-    def test_obter_cliente(self, db_session):
+    def test_obter_cliente(self, auth_token):
+        headers = {"Authorization": f"Bearer {auth_token}"}
         email_unico = f"maria_{uuid.uuid4().hex}@example.com"
         response_create = client.post(
             "/clientes/",
@@ -102,18 +56,21 @@ class TestClientes:
                 "email": email_unico,
                 "telefone": "11988888888",
             },
+            headers=headers,
         )
         cliente_id = response_create.json()["id"]
-        response = client.get(f"/clientes/{cliente_id}")
+        response = client.get(f"/clientes/{cliente_id}", headers=headers)
         assert response.status_code == 200
         assert response.json()["nome"] == "Maria Silva"
 
-    def test_listar_clientes(self, db_session):
-        response = client.get("/clientes/")
+    def test_listar_clientes(self, auth_token):
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        response = client.get("/clientes/", headers=headers)
         assert response.status_code == 200
         assert isinstance(response.json(), list)
 
-    def test_criar_cliente_email_duplicado(self, db_session):
+    def test_criar_cliente_email_duplicado(self, auth_token):
+        headers = {"Authorization": f"Bearer {auth_token}"}
         email_unico = f"duplicado_{uuid.uuid4().hex}@example.com"
         client.post(
             "/clientes/",
@@ -122,6 +79,7 @@ class TestClientes:
                 "email": email_unico,
                 "telefone": "11977777777",
             },
+            headers=headers,
         )
         response = client.post(
             "/clientes/",
@@ -130,12 +88,13 @@ class TestClientes:
                 "email": email_unico,
                 "telefone": "11977777778",
             },
+            headers=headers,
         )
         assert response.status_code == 400
 
 
 class TestChamados:
-    def criar_cliente(self):
+    def criar_cliente(self, headers):
         email_unico = f"clientechamado_{uuid.uuid4().hex}@example.com"
         response = client.post(
             "/clientes/",
@@ -144,11 +103,13 @@ class TestChamados:
                 "email": email_unico,
                 "telefone": "11999999999",
             },
+            headers=headers,
         )
         return response.json()["id"]
 
-    def test_criar_chamado_com_resolucao_automatica(self, db_session):
-        cliente_id = self.criar_cliente()
+    def test_criar_chamado_com_resolucao_automatica(self, auth_token, db_session):
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        cliente_id = self.criar_cliente(headers)
         response = client.post(
             "/chamados/",
             json={
@@ -156,13 +117,18 @@ class TestChamados:
                 "canal": "site",
                 "mensagem": "segunda via boleto",
             },
+            headers=headers,
         )
         assert response.status_code == 201
         assert response.json()["resolvido_automaticamente"] is True
         assert "segunda via" in response.json()["resposta"].lower()
 
-    def test_criar_chamado_para_encaminhamento(self, db_session):
-        cliente_id = self.criar_cliente()
+        chamado = db_session.query(Chamado).get(response.json()["chamado_id"])
+        assert chamado.user_id is not None
+
+    def test_criar_chamado_para_encaminhamento(self, auth_token, db_session):
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        cliente_id = self.criar_cliente(headers)
         response = client.post(
             "/chamados/",
             json={
@@ -170,13 +136,18 @@ class TestChamados:
                 "canal": "whatsapp",
                 "mensagem": "meu sistema está com erro grave",
             },
+            headers=headers,
         )
         assert response.status_code == 201
         assert response.json()["resolvido_automaticamente"] is False
         assert response.json()["encaminhado_para_humano"] is True
 
-    def test_obter_chamado(self, db_session):
-        cliente_id = self.criar_cliente()
+        chamado = db_session.query(Chamado).get(response.json()["chamado_id"])
+        assert chamado.user_id is not None
+
+    def test_obter_chamado(self, auth_token):
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        cliente_id = self.criar_cliente(headers)
         create_response = client.post(
             "/chamados/",
             json={
@@ -184,35 +155,41 @@ class TestChamados:
                 "canal": "email",
                 "mensagem": "qual meu plano?",
             },
+            headers=headers,
         )
         chamado_id = create_response.json()["chamado_id"]
-        response = client.get(f"/chamados/{chamado_id}")
+        response = client.get(f"/chamados/{chamado_id}", headers=headers)
         assert response.status_code == 200
 
-    def test_listar_chamados(self, db_session):
-        response = client.get("/chamados/")
+    def test_listar_chamados(self, auth_token):
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        response = client.get("/chamados/", headers=headers)
         assert response.status_code == 200
         assert isinstance(response.json(), list)
 
-    def test_listar_chamados_por_canal(self, db_session):
-        response = client.get("/chamados/?canal=site")
+    def test_listar_chamados_por_canal(self, auth_token):
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        response = client.get("/chamados/?canal=site", headers=headers)
         assert response.status_code == 200
         assert isinstance(response.json(), list)
 
 
 class TestMetricas:
-    def test_obter_metricas_gerais(self, db_session):
-        response = client.get("/metricas/")
+    def test_obter_metricas_gerais(self, auth_token):
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        response = client.get("/metricas/", headers=headers)
         assert response.status_code == 200
         assert "total_chamados" in response.json()
         assert "taxa_resolucao_automatica" in response.json()
 
-    def test_metricas_por_canal(self, db_session):
-        response = client.get("/metricas/por-canal")
+    def test_metricas_por_canal(self, auth_token):
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        response = client.get("/metricas/por-canal", headers=headers)
         assert response.status_code == 200
         assert isinstance(response.json(), dict)
 
-    def test_metricas_por_status(self, db_session):
-        response = client.get("/metricas/por-status")
+    def test_metricas_por_status(self, auth_token):
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        response = client.get("/metricas/por-status", headers=headers)
         assert response.status_code == 200
         assert isinstance(response.json(), dict)

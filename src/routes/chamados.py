@@ -13,14 +13,21 @@ from src.schemas.chamado import (
     ChamadoResponse,
 )
 from src.services.ia_classifier import IAClassifier
+from src.utils.security import get_current_user
 
 router = APIRouter(prefix="/chamados", tags=["Chamados"])
 
 
 @router.post(
-    "/", response_model=ChamadoCreateResponse, status_code=status.HTTP_201_CREATED
+    "/",
+    response_model=ChamadoCreateResponse,
+    status_code=status.HTTP_201_CREATED,
 )
-def criar_chamado(chamado: ChamadoCreate, db: Session = Depends(get_db)):
+def criar_chamado(
+    chamado: ChamadoCreate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
     """
     Cria um novo chamado (ticket de atendimento)
     Automaticamente classifica com IA e decide se resolve ou encaminha
@@ -38,6 +45,7 @@ def criar_chamado(chamado: ChamadoCreate, db: Session = Depends(get_db)):
     # Cria o chamado no banco
     novo_chamado = Chamado(
         cliente_id=chamado.cliente_id,
+        user_id=current_user.id,
         canal=chamado.canal,
         mensagem=chamado.mensagem,
         status="resolvido" if classificacao["resolvido"] else "aberto",
@@ -61,7 +69,11 @@ def criar_chamado(chamado: ChamadoCreate, db: Session = Depends(get_db)):
     )
 
 
-@router.get("/{chamado_id}", response_model=ChamadoResponse)
+@router.get(
+    "/{chamado_id}",
+    response_model=ChamadoResponse,
+    dependencies=[Depends(get_current_user)],
+)
 def obter_chamado(chamado_id: int, db: Session = Depends(get_db)):
     """Obtém informações de um chamado específico"""
     chamado = db.query(Chamado).filter(Chamado.id == chamado_id).first()
@@ -72,7 +84,11 @@ def obter_chamado(chamado_id: int, db: Session = Depends(get_db)):
     return chamado
 
 
-@router.get("/", response_model=list[ChamadoResponse])
+@router.get(
+    "/",
+    response_model=list[ChamadoResponse],
+    dependencies=[Depends(get_current_user)],
+)
 def listar_chamados(
     status_filtro: str = None,
     canal: str = None,
@@ -98,7 +114,11 @@ def listar_chamados(
     return chamados
 
 
-@router.put("/{chamado_id}", response_model=ChamadoResponse)
+@router.put(
+    "/{chamado_id}",
+    response_model=ChamadoResponse,
+    dependencies=[Depends(get_current_user)],
+)
 def atualizar_chamado_status(
     chamado_id: int, novo_status: str, db: Session = Depends(get_db)
 ):
@@ -124,7 +144,11 @@ def atualizar_chamado_status(
     return chamado
 
 
-@router.get("/cliente/{cliente_id}", response_model=list[ChamadoResponse])
+@router.get(
+    "/cliente/{cliente_id}",
+    response_model=list[ChamadoResponse],
+    dependencies=[Depends(get_current_user)],
+)
 def listar_chamados_por_cliente(
     cliente_id: int, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)
 ):

@@ -13,6 +13,12 @@ pydantic-settings
 email-validator
 python-dotenv
 
+# Autenticação e Segurança
+python-jose[cryptography]
+passlib==1.7.4
+bcrypt==3.2.0
+
 # Testes
 pytest
 pytest-asyncio
+httpx
