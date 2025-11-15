@@ -46,6 +46,13 @@ class Settings(BaseSettings):
     # ==================== LOGGING ====================
     LOG_LEVEL: str = Field("INFO", description="Nível de log.")
 
+    # ==================== JWT ====================
+    SECRET_KEY: str = Field(..., description="Chave secreta para assinar os tokens JWT.")
+    ALGORITHM: str = Field("HS256", description="Algoritmo de assinatura do token JWT.")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
+        30, description="Tempo de expiração do token de acesso em minutos."
+    )
+
 
 # Instância única das configurações para ser importada em outros módulos
 try:

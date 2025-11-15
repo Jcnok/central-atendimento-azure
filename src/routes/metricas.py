@@ -5,11 +5,12 @@ from sqlalchemy.orm import Session
 from src.config.database import get_db
 from src.models.chamado import Chamado
 from src.models.cliente import Cliente
+from src.utils.security import get_current_user
 
 router = APIRouter(prefix="/metricas", tags=["Métricas"])
 
 
-@router.get("/", response_model=dict)
+@router.get("/", response_model=dict, dependencies=[Depends(get_current_user)])
 def obter_metricas(db: Session = Depends(get_db)):
     """Retorna métricas gerais de atendimento"""
 
@@ -43,7 +44,9 @@ def obter_metricas(db: Session = Depends(get_db)):
     }
 
 
-@router.get("/por-canal", response_model=dict)
+@router.get(
+    "/por-canal", response_model=dict, dependencies=[Depends(get_current_user)]
+)
 def metricas_por_canal(db: Session = Depends(get_db)):
     """Retorna métricas detalhadas por canal"""
     canais = ["site", "whatsapp", "email"]
@@ -70,7 +73,9 @@ def metricas_por_canal(db: Session = Depends(get_db)):
     return resultado
 
 
-@router.get("/por-status", response_model=dict)
+@router.get(
+    "/por-status", response_model=dict, dependencies=[Depends(get_current_user)]
+)
 def metricas_por_status(db: Session = Depends(get_db)):
     """Retorna distribuição de chamados por status"""
     statuses = ["aberto", "resolvido", "encaminhado"]
