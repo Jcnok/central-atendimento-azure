@@ -137,19 +137,32 @@ A aplicação estará disponível em `http://127.0.0.1:8000`.
 
 ---
 
-## 🔐 Variáveis de Ambiente
+## 🔐 Autenticação
+
+O acesso à API é protegido por **JSON Web Tokens (JWT)**. Todas as requisições para endpoints protegidos devem incluir um `token` de acesso no cabeçalho `Authorization`.
+
+#### Fluxo de Autenticação:
+1.  **Cadastro (`/auth/signup`):** Um novo usuário é criado com `username`, `email` e `password`.
+2.  **Login (`/auth/login`):** O usuário envia `username` e `password` para obter um `access_token`.
+3.  **Acesso a Endpoints Protegidos:** O `access_token` é enviado no cabeçalho das requisições:
+    `Authorization: Bearer <seu_token_aqui>`
+
+---
+
+## ⚙️ Variáveis de Ambiente
 
 As configurações da aplicação são gerenciadas via variáveis de ambiente através de um arquivo `.env`.
 
 | Variável | Descrição | Exemplo |
 | :--- | :--- | :--- |
 | **`DATABASE_URL`** | **(Obrigatório)** String de conexão com o PostgreSQL. | `postgresql://user:pass@host:port/db` |
+| **`SECRET_KEY`** | **(Obrigatório)** Chave secreta para assinar os tokens JWT. | `uma_chave_super_secreta` |
+| `ALGORITHM` | Algoritmo de assinatura do token JWT. | `HS256` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Tempo de expiração do token de acesso. | `30` |
 | `APP_ENV` | Ambiente da aplicação. | `development` |
 | `APP_DEBUG` | Ativa o modo debug. | `False` |
 | `APP_HOST` | Host para o servidor Uvicorn. | `0.0.0.0` |
 | `APP_PORT` | Porta para o servidor Uvicorn. | `8000` |
-| `AZURE_COGNITIVE_KEY` | (Opcional) Chave da API do Azure Cognitive Services. | `sua_chave_aqui` |
-| `AZURE_COGNITIVE_ENDPOINT` | (Opcional) Endpoint do Azure Cognitive Services. | `https://seu-endpoint.cognitiveservices.azure.com/` |
 
 ---
 
@@ -205,13 +218,14 @@ Essas interfaces são a **fonte primária de verdade** para todos os endpoints, 
 <details>
 <summary>Clique para ver um resumo dos endpoints principais</summary>
 
+-   `POST /auth/signup`: Cria um novo usuário.
+-   `POST /auth/login`: Autentica um usuário e retorna um token JWT.
 -   `GET /`: Health check da API.
--   `POST /clientes/`: Cria um novo cliente.
--   `GET /clientes/{id}`: Obtém um cliente específico.
--   `POST /chamados/`: Cria um novo chamado (com classificação automática de IA).
--   `GET /chamados/{id}`: Obtém um chamado específico.
--   `GET /chamados/`: Lista chamados com filtros.
--   `GET /metricas/`: Obtém métricas gerais de atendimento.
+-   `POST /clientes/`: (Protegido) Cria um novo cliente.
+-   `GET /clientes/{id}`: (Protegido) Obtém um cliente específico.
+-   `POST /chamados/`: (Protegido) Cria um novo chamado.
+-   `GET /chamados/{id}`: (Protegido) Obtém um chamado específico.
+-   `GET /metricas/`: (Protegido) Obtém métricas gerais de atendimento.
 
 </details>
 
@@ -228,16 +242,13 @@ O App Service deve ser configurado com o seguinte comando de inicialização:
 gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.main:app
 ```
 
-#### Exemplo de Workflow com GitHub Actions
-
-O arquivo `.github/workflows/deploy.yml` contém um exemplo de pipeline de CI/CD para fazer o deploy automático no Azure a cada push na branch `main`. Para usá-lo, você precisará configurar o secret `AZURE_PUBLISHPROFILE` no seu repositório GitHub.
-
 ---
 
 ## 📈 Roadmap
 
--   [ ] **v1.1**: Integração com N8N para workflows, Dashboard em React, Autenticação JWT.
--   [ ] **v1.2**: Integração real com **Azure Cognitive Services**, WhatsApp Business API, SendGrid.
+-   [x] **v1.1**: Autenticação JWT implementada.
+-   [ ] **v1.2**: Integração com N8N para workflows, Dashboard em React.
+-   [ ] **v1.3**: Integração real com **Azure Cognitive Services**, WhatsApp Business API, SendGrid.
 -   [ ] **v2.0**: Arquitetura multi-tenant, ML para priorização, integração com CRMs.
 
 ---
