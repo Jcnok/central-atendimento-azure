@@ -30,6 +30,9 @@ jobs:
     - name: Run tests
       run: |
         pytest
+      env:
+        DATABASE_URL: "postgresql://test:test@localhost/testdb"
+        SECRET_KEY: "test_secret_key_for_ci"
 
     - name: Log in to Azure
       uses: azure/login@v1
