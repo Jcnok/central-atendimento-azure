@@ -252,16 +252,166 @@ central-atendimento-azure/
 
 ---
 
-## ☁️ Deploy na Azure
+## ☁️ Deploy na Azure: Guia Completo
 
-O projeto está pronto para deploy no **Azure App Service**.
+Esta seção fornece um guia detalhado para fazer o deploy da aplicação e do banco de dados no Azure.
 
-#### Comando de Inicialização para Produção
+### Pré-requisitos
 
-O App Service deve ser configurado com o seguinte comando de inicialização:
+1.  **Conta no Azure**: Você precisa de uma assinatura ativa. [Crie uma gratuitamente](https://azure.microsoft.com/free/).
+2.  **Azure CLI**: Instale a interface de linha de comando do Azure. [Guia de instalação](https://docs.microsoft.com/cli/azure/install-azure-cli).
+3.  **Código no GitHub**: O seu código deve estar em um repositório GitHub para facilitar o deploy contínuo.
+
+Após instalar a Azure CLI, faça o login:
+```bash
+az login
 ```
-gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.main:app
+
+### Passo 1: Criar o Banco de Dados (Azure Database for PostgreSQL)
+
+A aplicação precisa de um banco de dados PostgreSQL. Vamos criar um usando o "Servidor Flexível", que é a opção recomendada.
+
+<details>
+<summary><strong>Opção 1: Criar Banco de Dados com Azure CLI (Recomendado)</strong></summary>
+
+```bash
+# Variáveis (sinta-se à vontade para alterar os nomes)
+RESOURCE_GROUP="rg-central-atendimento"
+LOCATION="eastus"
+POSTGRES_SERVER_NAME="pg-central-atendimento-$RANDOM"
+POSTGRES_DB_NAME="central_atendimento_db"
+ADMIN_USER="dbadmin"
+ADMIN_PASSWORD="SuaSenhaSuperForte123!"
+
+# 1. Criar um Grupo de Recursos
+az group create --name $RESOURCE_GROUP --location $LOCATION
+
+# 2. Criar o servidor PostgreSQL
+# A SKU B_Standard_B1ms é uma das mais baratas, ideal para dev/teste.
+az postgres flexible-server create \
+  --resource-group $RESOURCE_GROUP \
+  --name $POSTGRES_SERVER_NAME \
+  --location $LOCATION \
+  --admin-user $ADMIN_USER \
+  --admin-password $ADMIN_PASSWORD \
+  --sku-name Standard_B1ms \
+  --tier Burstable \
+  --public-access 0.0.0.0 \
+  --storage-size 32 \
+  --version 14
+
+# 3. Criar o banco de dados dentro do servidor
+az postgres flexible-server db create \
+  --resource-group $RESOURCE_GROUP \
+  --server-name $POSTGRES_SERVER_NAME \
+  --database-name $POSTGRES_DB_NAME
+
+# 4. Obter a string de conexão (será usada no Passo 3)
+# Anote o resultado deste comando!
+az postgres flexible-server show-connection-string \
+  --server-name $POSTGRES_SERVER_NAME \
+  --database-name $POSTGRES_DB_NAME \
+  --admin-user $ADMIN_USER \
+  --admin-password $ADMIN_PASSWORD
 ```
+</details>
+
+<details>
+<summary><strong>Opção 2: Criar Banco de Dados com o Portal Azure</strong></summary>
+
+1.  No portal do Azure, clique em **"Criar um recurso"**.
+2.  Procure por **"Banco de Dados do Azure para PostgreSQL"** e clique em "Criar".
+3.  Selecione a opção **"Servidor Flexível"**.
+4.  Preencha os detalhes:
+    -   **Grupo de Recursos**: Crie um novo (ex: `rg-central-atendimento`).
+    -   **Nome do servidor**: Escolha um nome único globalmente (ex: `pg-central-atendimento-seu-nome`).
+    -   **Região**: Escolha a mais próxima de você (ex: `(US) East US`).
+    -   **Computação + armazenamento**: Clique em "Configurar servidor" e escolha o nível "Expansível" (`Burstable`), com a SKU `B1ms` para manter os custos baixos.
+    -   **Nome de usuário do administrador** e **Senha**: Crie suas credenciais.
+5.  Vá para a aba **"Rede"**.
+    -   Em "Método de conectividade", selecione **"Acesso público"**.
+    -   Em "Regras de firewall", clique em **"Permitir acesso público de qualquer serviço do Azure..."**. Isso é crucial para que o App Service consiga se conectar.
+6.  Clique em **"Revisar + criar"** e depois em **"Criar"**.
+7.  Após a criação do servidor, vá até o recurso, clique em **"Bancos de Dados"** no menu lateral e crie um novo banco de dados (ex: `central_atendimento_db`).
+</details>
+
+### Passo 2: Deploy da Aplicação (Azure App Service)
+
+Agora, vamos fazer o deploy da aplicação FastAPI.
+
+<details>
+<summary><strong>Opção 1: Deploy com Azure CLI (Recomendado)</strong></summary>
+
+O comando `az webapp up` é uma forma poderosa de criar e fazer o deploy de uma vez só.
+
+```bash
+# Execute este comando na raiz do seu projeto
+
+# Variáveis
+APP_SERVICE_PLAN="plan-central-atendimento"
+WEBAPP_NAME="app-central-atendimento-$RANDOM"
+
+# Criar o Plano de Serviço e o App Service, e fazer o deploy do código
+# O comando detecta automaticamente que é um projeto Python.
+az webapp up \
+  --resource-group $RESOURCE_GROUP \
+  --name $WEBAPP_NAME \
+  --plan $APP_SERVICE_PLAN \
+  --sku B1 \
+  --location $LOCATION
+```
+Este comando pode demorar alguns minutos. Ele irá configurar um deploy básico. Para conectar ao GitHub, siga para o Passo 3 e depois veja a nota sobre CI/CD.
+</details>
+
+<details>
+<summary><strong>Opção 2: Deploy com o Portal Azure e GitHub</strong></summary>
+
+1.  No portal do Azure, clique em **"Criar um recurso"**.
+2.  Procure por **"Aplicativo Web"** (`Web App`) e clique em "Criar".
+3.  Preencha os detalhes:
+    -   **Grupo de Recursos**: Selecione o mesmo grupo criado para o banco de dados.
+    -   **Nome**: Escolha um nome único globalmente (ex: `app-central-atendimento-seu-nome`).
+    -   **Publicar**: `Código`.
+    -   **Pilha de runtime**: `Python 3.10` (ou a versão que estiver usando).
+    -   **Sistema Operacional**: `Linux`.
+    -   **Plano do Serviço de Aplicativo**: Crie um novo. A SKU `B1` (Básico) é uma boa opção de baixo custo para começar.
+4.  Clique em **"Revisar + criar"** e depois em **"Criar"**.
+5.  Após a criação, vá até o recurso do App Service.
+6.  No menu lateral, vá para **"Centro de Implantação"** (`Deployment Center`).
+7.  Selecione **"GitHub"** como a fonte.
+8.  Autorize o Azure a acessar seu GitHub e selecione o repositório e o branch (ex: `master` ou `main`) do seu projeto.
+9.  Salve a configuração. O Azure irá automaticamente buscar seu código e iniciar o primeiro deploy (CI/CD).
+</details>
+
+### Passo 3: Configurar a Aplicação no Azure
+
+Sua aplicação não lê o arquivo `.env` em produção. As variáveis de ambiente devem ser configuradas diretamente no App Service.
+
+1.  Vá para o seu recurso de **App Service** no portal do Azure.
+2.  No menu lateral, vá para **"Configuração"** (`Configuration`).
+3.  Na aba **"Configurações do aplicativo"** (`Application settings`), clique em **"+ Nova configuração de aplicativo"** para adicionar as seguintes variáveis:
+
+| Nome da Configuração | Valor | Descrição |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | `postgresql://dbadmin:SuaSenhaSuperForte123!@pg-central-atendimento-xxxx.postgres.database.azure.com:5432/central_atendimento_db` | A string de conexão do seu banco de dados PostgreSQL. |
+| `SECRET_KEY` | `SuaChaveSecretaSuperLongaGeradaComOpenSSL` | A mesma chave secreta que você usaria localmente. |
+| `ALGORITHM` | `HS256` | Opcional, já é o padrão. |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | `30` | Opcional, já é o padrão. |
+
+4.  **Comando de Inicialização**: Ainda na página de "Configuração", vá para a aba **"Configurações gerais"** (`General settings`).
+    -   No campo **"Comando de inicialização"** (`Startup Command`), insira o comando Gunicorn para produção:
+        ```
+        gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.main:app
+        ```
+5.  **Salve as alterações!** O App Service será reiniciado com as novas configurações.
+
+### Passo 4: Acessar a Aplicação
+
+Após a reinicialização, sua API estará no ar!
+
+-   Vá para a página de **"Visão geral"** (`Overview`) do seu App Service.
+-   Você encontrará a URL padrão do seu site (ex: `https://app-central-atendimento-xxxx.azurewebsites.net`).
+-   Acesse a documentação em `https://<sua-url>/docs` para começar a interagir com a sua API em produção.
 
 ---
 
