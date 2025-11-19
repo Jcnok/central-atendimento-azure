@@ -18,6 +18,7 @@ Uma API de back-end robusta para uma central de atendimento, capaz de processar 
 - [Tecnologias](#-tecnologias)
 - [Arquitetura](#-arquitetura)
 - [🚀 Começando: Guia de Instalação](#-começando-guia-de-instalação)
+- [🐳 Rodando com Docker Compose](#-rodando-com-docker-compose)
 - [⚙️ Variáveis de Ambiente](#-variáveis-de-ambiente)
 - [📡 Testando a API: Guia Prático](#-testando-a-api-guia-prático)
 - [☁️ Deploy e CI/CD na Azure](#-deploy-e-cicd-na-azure)
@@ -59,6 +60,7 @@ Um orquestrador de atendimento que automatiza o fluxo de trabalho:
 | **Banco de Dados** | PostgreSQL | Banco de dados relacional |
 | **ORM** | SQLAlchemy | v2.0, para manipulação de dados segura|
 | **Validação**| Pydantic | v2, para validação e configurações |
+| **Containerização** | Docker / Docker Compose | Ambiente de desenvolvimento padronizado. |
 | **Servidor** | Uvicorn & Gunicorn| Servidores ASGI/WSGI para dev/prod |
 | **Testes** | Pytest | Testes automatizados com BD em memória |
 | **Cloud** | Azure App Service | Hospedagem da aplicação |
@@ -93,7 +95,7 @@ A arquitetura segue um padrão de camadas desacoplado, facilitando a manutençã
 
 ## 🚀 Começando: Guia de Instalação
 
-Siga os passos abaixo para ter o projeto rodando localmente.
+Siga os passos abaixo para ter o projeto rodando localmente **sem Docker**.
 
 #### 1. Pré-requisitos
 
@@ -129,7 +131,7 @@ A aplicação precisa de variáveis de ambiente para rodar.
 # Copie o arquivo de exemplo. Este será seu arquivo de configuração local.
 cp .env.example .env
 ```
-Agora, **abra o arquivo `.env`** e preencha as variáveis obrigatórias. Veja a seção [Variáveis de Ambiente](#-variáveis-de-ambiente) para mais detalhes. No mínimo, você precisará configurar `DATABASE_URL` e `SECRET_KEY`.
+Agora, **abra o arquivo `.env`** e preencha as variáveis obrigatórias. Para o setup local, você precisará da `DATABASE_URL` apontando para seu banco de dados local e de uma `SECRET_KEY`.
 
 #### 4. Execução
 
@@ -138,7 +140,42 @@ Com tudo configurado, inicie a aplicação:
 # Inicie o servidor em modo de desenvolvimento com auto-reload
 uvicorn src.main:app --reload
 ```
-A API estará disponível em `http://127.0.0.1:8000`. As tabelas do banco de dados são criadas automaticamente na primeira inicialização.
+A API estará disponível em `http://127.0.0.1:8000`.
+
+---
+
+## 🐳 Rodando com Docker Compose
+
+Esta é a forma **recomendada e mais simples** para rodar o ambiente de desenvolvimento. O Docker Compose irá orquestrar a API e o banco de dados automaticamente.
+
+### 1. Pré-requisitos
+- [Docker](https://www.docker.com/products/docker-desktop/) e Docker Compose instalados.
+
+### 2. Configuração
+```bash
+# 1. Clone o repositório (se ainda não o fez)
+git clone https://github.com/Jcnok/central-atendimento-azure.git
+cd central-atendimento-azure
+
+# 2. Crie seu arquivo de ambiente a partir do exemplo
+cp .env.example .env
+```
+**Nenhuma alteração é necessária no arquivo `.env` para o Docker Compose funcionar**, pois ele já vem pré-configurado para o ambiente Docker.
+
+### 3. Execução
+```bash
+# Suba os containers da API e do banco de dados em modo "detached" (-d)
+docker-compose up --build -d
+```
+- O comando `--build` garante que a imagem da sua API será reconstruída se houver alterações no `Dockerfile` ou no código-fonte.
+- O `-d` faz com que os containers rodem em segundo plano.
+
+A API estará disponível em `http://127.0.0.1:8000`.
+
+### Comandos Úteis do Docker Compose
+- **Parar os containers**: `docker-compose down`
+- **Ver os logs da API**: `docker-compose logs -f api`
+- **Acessar o shell dentro do container da API**: `docker-compose exec api bash`
 
 ---
 
@@ -152,6 +189,9 @@ As configurações são carregadas do arquivo `.env`.
 | `SECRET_KEY` | **Sim** | Chave secreta para assinar os tokens JWT. | `uma_chave_super_secreta_e_segura` |
 | `ALGORITHM` | Não | Algoritmo de assinatura do token JWT. | `HS256` |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Não | Tempo de expiração do token de acesso. | `30` |
+| `POSTGRES_USER` | **Sim** (Docker) | Usuário do banco de dados para o container. | `admin` |
+| `POSTGRES_PASSWORD` | **Sim** (Docker) | Senha do banco de dados para o container. | `admin` |
+| `POSTGRES_DB` | **Sim** (Docker) | Nome do banco de dados a ser criado. | `central_atendimento_db` |
 
 <details>
 <summary><strong>Dica de Segurança para a SECRET_KEY</strong></summary>
