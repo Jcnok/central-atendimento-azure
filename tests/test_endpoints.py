@@ -123,7 +123,7 @@ class TestChamados:
         assert response.json()["resolvido_automaticamente"] is True
         assert "segunda via" in response.json()["resposta"].lower()
 
-        chamado = db_session.query(Chamado).get(response.json()["chamado_id"])
+        chamado = db_session.get(Chamado, response.json()["chamado_id"])
         assert chamado.user_id is not None
 
     def test_criar_chamado_para_encaminhamento(self, auth_token, db_session):
@@ -142,7 +142,7 @@ class TestChamados:
         assert response.json()["resolvido_automaticamente"] is False
         assert response.json()["encaminhado_para_humano"] is True
 
-        chamado = db_session.query(Chamado).get(response.json()["chamado_id"])
+        chamado = db_session.get(Chamado, response.json()["chamado_id"])
         assert chamado.user_id is not None
 
     def test_obter_chamado(self, auth_token):
