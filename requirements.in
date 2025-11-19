@@ -2,6 +2,7 @@
 fastapi
 gunicorn
 uvicorn
+python-multipart
 
 # Banco de Dados
 sqlalchemy

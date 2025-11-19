@@ -71,7 +71,7 @@ def auth_token(db_session):
 
     login_response = client.post(
         "/auth/login",
-        json={"username": unique_username, "password": "password"},
+        data={"username": unique_username, "password": "password"},
     )
     assert login_response.status_code == 200, f"Login failed: {login_response.text}"
 

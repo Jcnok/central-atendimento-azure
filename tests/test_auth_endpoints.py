@@ -21,7 +21,7 @@ class TestAuthEndpoints:
         )
         response = client.post(
             "/auth/login",
-            json={"username": "testuser2", "password": "password"},
+            data={"username": "testuser2", "password": "password"},
         )
         assert response.status_code == 200
         assert "access_token" in response.json()
