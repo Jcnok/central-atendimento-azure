@@ -304,10 +304,15 @@ O App Service precisa das mesmas variáveis de ambiente que você usa localmente
 3.  Adicione as seguintes configurações:
     -   `DATABASE_URL`: A string de conexão do seu banco de dados PostgreSQL no Azure.
     -   `SECRET_KEY`: A mesma chave secreta forte que você usaria em produção.
-4.  Ainda em **Configuration**, vá para a aba **General settings** e defina o **Startup Command**:
-    ```
-    gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.main:app
-    ```
+4.  Ainda em **Configuration**, vá para a aba **General settings** e defina o **Startup Command**. Você tem duas opções:
+    -   **Opção A (Direto):** Cole o comando no campo "Startup Command":
+        ```
+        gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.main:app
+        ```
+    -   **Opção B (Via Script):** Use o script `startup.sh` incluído no projeto, que é ideal para lógicas de inicialização mais complexas no futuro. No campo "Startup Command", digite:
+        ```
+        ./startup.sh
+        ```
 5.  **Salve as alterações**. O App Service será reiniciado.
 
 ### Passo 5: Ativar o Pipeline
@@ -383,6 +388,7 @@ central-atendimento-azure/
 ├── tests/                     # Testes automatizados
 ├── .env.example               # Arquivo de exemplo para variáveis de ambiente
 ├── requirements.txt           # Dependências travadas (gerado por pip-tools)
+├── startup.sh                 # Script de inicialização para o App Service
 └── reset_db.py                # Script para resetar o banco de dados de dev
 ```
 

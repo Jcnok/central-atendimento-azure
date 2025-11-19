@@ -2,15 +2,9 @@
 
 # Script de inicialização para Azure App Service
 
-echo "🚀 Iniciando Central de Atendimento Automática..."
+echo "🚀 Iniciando Gunicorn para a aplicação FastAPI..."
 
-# Instalar dependências
-pip install -r requirements.txt
-
-# Inicializar banco de dados
-python -c "from src.config.database import init_db; init_db()"
-
-echo "✅ Aplicação pronta para rodar!"
-
-# Iniciar Gunicorn
-gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.main:app --bind 0.0.0.0:8000
+# O Azure App Service injeta a porta na variável de ambiente $PORT.
+# O Gunicorn deve escutar nesta porta para que a plataforma consiga
+# rotear o tráfego corretamente para a aplicação.
+gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.main:app --bind "0.0.0.0:$PORT"
