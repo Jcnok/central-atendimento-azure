@@ -276,15 +276,15 @@ A aplicação precisa de um banco de dados PostgreSQL. Vamos criar um usando o "
 
 ```bash
 # Variáveis (sinta-se à vontade para alterar os nomes)
-RESOURCE_GROUP="rg-central-atendimento"
-LOCATION="eastus"
+RESOURCE_GROUP="central-atendimento-rg" # Usar o nome do seu grupo de recursos existente
+LOCATION="canadacentral" # Usar a localização do seu grupo de recursos existente
 POSTGRES_SERVER_NAME="pg-central-atendimento-$RANDOM"
 POSTGRES_DB_NAME="central_atendimento_db"
 ADMIN_USER="dbadmin"
-ADMIN_PASSWORD="SuaSenhaSuperForte123!"
+ADMIN_PASSWORD="SuaSenhaSuperForte123!" # ATENÇÃO: Use uma senha forte e segura!
 
-# 1. Criar um Grupo de Recursos
-az group create --name $RESOURCE_GROUP --location $LOCATION
+# 1. Criar um Grupo de Recursos (se ainda não tiver um com o nome acima)
+# az group create --name $RESOURCE_GROUP --location $LOCATION
 
 # 2. Criar o servidor PostgreSQL
 # A SKU B_Standard_B1ms é uma das mais baratas, ideal para dev/teste.
@@ -323,9 +323,9 @@ az postgres flexible-server show-connection-string \
 2.  Procure por **"Banco de Dados do Azure para PostgreSQL"** e clique em "Criar".
 3.  Selecione a opção **"Servidor Flexível"**.
 4.  Preencha os detalhes:
-    -   **Grupo de Recursos**: Crie um novo (ex: `rg-central-atendimento`).
+    -   **Grupo de Recursos**: Selecione o seu grupo de recursos existente (ex: `central-atendimento-rg`).
     -   **Nome do servidor**: Escolha um nome único globalmente (ex: `pg-central-atendimento-seu-nome`).
-    -   **Região**: Escolha a mais próxima de você (ex: `(US) East US`).
+    -   **Região**: Escolha a mesma região do seu grupo de recursos (ex: `Canada Central`).
     -   **Computação + armazenamento**: Clique em "Configurar servidor" e escolha o nível "Expansível" (`Burstable`), com a SKU `B1ms` para manter os custos baixos.
     -   **Nome de usuário do administrador** e **Senha**: Crie suas credenciais.
 5.  Vá para a aba **"Rede"**.
@@ -348,19 +348,23 @@ O comando `az webapp up` é uma forma poderosa de criar e fazer o deploy de uma 
 # Execute este comando na raiz do seu projeto
 
 # Variáveis
-APP_SERVICE_PLAN="plan-central-atendimento"
-WEBAPP_NAME="app-central-atendimento-$RANDOM"
+RESOURCE_GROUP="central-atendimento-rg" # Usar o nome do seu grupo de recursos existente
+LOCATION="canadacentral" # Usar a localização do seu grupo de recursos existente
+WEBAPP_NAME="app-central-atendimento-$RANDOM" # Nome único para sua aplicação web
 
-# Criar o Plano de Serviço e o App Service, e fazer o deploy do código
-# O comando detecta automaticamente que é um projeto Python.
+# 1. Registrar o provedor Microsoft.Web (se ainda não estiver registrado)
+#    Isso é necessário para criar App Services.
+az provider register --namespace Microsoft.Web
+
+# 2. Criar o App Service Plan e o App Service, e fazer o deploy do código
+#    O comando detecta automaticamente que é um projeto Python.
 az webapp up \
   --resource-group $RESOURCE_GROUP \
   --name $WEBAPP_NAME \
-  --plan $APP_SERVICE_PLAN \
   --sku B1 \
   --location $LOCATION
 ```
-Este comando pode demorar alguns minutos. Ele irá configurar um deploy básico. Para conectar ao GitHub, siga para o Passo 3 e depois veja a nota sobre CI/CD.
+Este comando pode demorar alguns minutos. Ele irá configurar um deploy básico. Anote o `WEBAPP_NAME` gerado, pois ele será usado na configuração do CI/CD.
 </details>
 
 <details>
@@ -369,11 +373,12 @@ Este comando pode demorar alguns minutos. Ele irá configurar um deploy básico.
 1.  No portal do Azure, clique em **"Criar um recurso"**.
 2.  Procure por **"Aplicativo Web"** (`Web App`) e clique em "Criar".
 3.  Preencha os detalhes:
-    -   **Grupo de Recursos**: Selecione o mesmo grupo criado para o banco de dados.
+    -   **Grupo de Recursos**: Selecione o seu grupo de recursos existente (ex: `central-atendimento-rg`).
     -   **Nome**: Escolha um nome único globalmente (ex: `app-central-atendimento-seu-nome`).
     -   **Publicar**: `Código`.
     -   **Pilha de runtime**: `Python 3.10` (ou a versão que estiver usando).
     -   **Sistema Operacional**: `Linux`.
+    -   **Região**: Escolha a mesma região do seu grupo de recursos (ex: `Canada Central`).
     -   **Plano do Serviço de Aplicativo**: Crie um novo. A SKU `B1` (Básico) é uma boa opção de baixo custo para começar.
 4.  Clique em **"Revisar + criar"** e depois em **"Criar"**.
 5.  Após a criação, vá até o recurso do App Service.
@@ -383,7 +388,7 @@ Este comando pode demorar alguns minutos. Ele irá configurar um deploy básico.
 9.  Salve a configuração. O Azure irá automaticamente buscar seu código e iniciar o primeiro deploy (CI/CD).
 </details>
 
-### Passo 3: Configurar a Aplicação no Azure
+### Passo 3: Configurar Variáveis de Ambiente no App Service
 
 Sua aplicação não lê o arquivo `.env` em produção. As variáveis de ambiente devem ser configuradas diretamente no App Service.
 
@@ -412,6 +417,119 @@ Após a reinicialização, sua API estará no ar!
 -   Vá para a página de **"Visão geral"** (`Overview`) do seu App Service.
 -   Você encontrará a URL padrão do seu site (ex: `https://app-central-atendimento-xxxx.azurewebsites.net`).
 -   Acesse a documentação em `https://<sua-url>/docs` para começar a interagir com a sua API em produção.
+
+---
+
+## 🚀 Configurando CI/CD com GitHub Actions
+
+Automatize o deploy da sua aplicação no Azure App Service a cada push para a branch `master` (ou `main`).
+
+### Pré-requisitos
+
+1.  **Repositório GitHub**: Seu código deve estar no GitHub.
+2.  **App Service no Azure**: O App Service para onde você fará o deploy já deve estar criado e configurado (conforme a seção [Deploy na Azure](#-deploy-na-azure)).
+3.  **Azure CLI**: Instalada e logada localmente.
+
+### Passo 1: Criar um Service Principal no Azure
+
+Um Service Principal é uma identidade de segurança que o GitHub Actions usará para se autenticar no Azure e realizar o deploy.
+
+1.  **Obtenha o ID da sua assinatura Azure**:
+    ```bash
+    az account show --query "{id:id, name:name}"
+    ```
+    Anote o valor do `id`.
+
+2.  **Crie o Service Principal**: Substitua `{seu-subscription-id}` pelo ID da sua assinatura e `central-atendimento-rg` pelo nome do seu grupo de recursos.
+
+    ```bash
+    az ad sp create-for-rbac --name "sp-central-atendimento-github" --role "contributor" --scopes "/subscriptions/{seu-subscription-id}/resourceGroups/central-atendimento-rg" --sdk-auth
+    ```
+    <details>
+    <summary><strong>Solução de Problemas: `ResourceGroupNotFound`</strong></summary>
+    Se você receber o erro `ResourceGroupNotFound`, significa que o grupo de recursos especificado não existe ou o nome está incorreto. Verifique o nome do seu grupo de recursos no Portal do Azure ou crie-o primeiro com `az group create --name "central-atendimento-rg" --location "canadacentral"`.
+    </details>
+
+3.  **Copie o JSON de Saída**: O comando irá gerar um bloco JSON com as credenciais do Service Principal. **Copie todo este bloco**, pois ele será usado no próximo passo.
+
+### Passo 2: Configurar o Segredo no GitHub
+
+Armazene as credenciais do Service Principal de forma segura no seu repositório GitHub.
+
+1.  No seu repositório GitHub, vá para **"Settings" > "Secrets and variables" > "Actions"**.
+2.  Clique em **"New repository secret"**.
+3.  **Name**: `AZURE_CREDENTIALS` (use este nome exato).
+4.  **Secret**: Cole todo o bloco JSON copiado do terminal.
+5.  Clique em **"Add secret"**.
+
+### Passo 3: Criar o Arquivo de Workflow (`.github/workflows/deploy.yml`)
+
+Este arquivo define o pipeline de CI/CD.
+
+1.  No seu repositório local, crie a pasta `.github/workflows/` (se não existir).
+2.  Dentro dela, crie um arquivo chamado `deploy.yml`.
+3.  Cole o seguinte conteúdo no arquivo, **substituindo `app-central-atendimento-19055` pelo nome real do seu App Service**:
+
+```yaml
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches:
+      - master # Ou 'main', dependendo do nome da sua branch principal
+
+env:
+  AZURE_WEBAPP_NAME: app-central-atendimento-19055 # Substitua pelo nome do seu App Service
+  PYTHON_VERSION: '3.10' # Versão do Python usada no seu projeto
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run tests
+      run: |
+        pytest
+      env: # Variáveis de ambiente dummy para os testes
+        DATABASE_URL: "postgresql://test:test@localhost/testdb"
+        SECRET_KEY: "test_secret_key_for_ci"
+
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        slot-name: 'production'
+        package: . # Implanta o conteúdo do diretório raiz do repositório
+        startup-command: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.main:app'
+```
+
+### Passo 4: Commit e Push
+
+1.  Adicione o arquivo `deploy.yml` ao Git, faça o commit e envie para a branch `master`:
+    ```bash
+    git add .github/workflows/deploy.yml
+    git commit -m "feat(ci): Adicionar pipeline de CI/CD para Azure App Service"
+    git push origin master
+    ```
+2.  **Monitore o Deploy**: Vá para a aba **"Actions"** do seu repositório no GitHub para acompanhar o progresso do pipeline.
 
 ---
 
