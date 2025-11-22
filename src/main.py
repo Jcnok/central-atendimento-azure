@@ -37,6 +37,9 @@ async def lifespan(app: FastAPI):
     close_db()  # Fecha as conexões com o banco de dados
 
 
+from fastapi.openapi.utils import get_openapi
+from src.utils.openapi_fix import fix_openapi_spec
+
 # ==================== INICIALIZAÇÃO DO FASTAPI ====================
 app = FastAPI(
     title="Central de Atendimento Automática",
@@ -46,6 +49,28 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan,  # Adiciona o gerenciador de ciclo de vida
 )
+
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        openapi_version="3.0.3",
+        description=app.description,
+        routes=app.routes,
+    )
+
+    # Corrige a especificação para ser compatível com OpenAPI 3.0.3
+    fix_openapi_spec(openapi_schema)
+
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
 
 # ==================== CORS ====================
 app.add_middleware(
