@@ -58,12 +58,16 @@ def custom_openapi():
     openapi_schema = get_openapi(
         title=app.title,
         version=app.version,
-        openapi_version="3.0.3",
+        openapi_version="3.0.1",
         description=app.description,
         routes=app.routes,
     )
 
-    # Corrige a especificação para ser compatível com OpenAPI 3.0.3
+    # Adiciona configuração de servidores se não existir
+    if "servers" not in openapi_schema:
+        openapi_schema["servers"] = [{"url": "/"}]
+
+    # Corrige a especificação para ser compatível com OpenAPI 3.0.1
     fix_openapi_spec(openapi_schema)
 
     app.openapi_schema = openapi_schema
