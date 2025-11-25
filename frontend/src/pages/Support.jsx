@@ -166,8 +166,8 @@ export default function Support() {
                 {step === 'email-input' && (
                     <form onSubmit={mode === 'support' ? handleCheckEmail : handleGerarBoleto}>
                         <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <button 
-                                type="button" 
+                            <button
+                                type="button"
                                 onClick={() => setStep(1)}
                                 style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.2rem' }}
                             >
@@ -264,7 +264,7 @@ export default function Support() {
                     <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
                         <h2 style={{ marginBottom: '1rem' }}>Boleto Gerado!</h2>
-                        
+
                         <div style={{
                             background: 'white',
                             color: 'black',
@@ -289,16 +289,16 @@ export default function Support() {
                             </div>
                         </div>
 
-                        <a 
+                        <a
                             href={boleto.link_pdf}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="btn-primary"
-                            style={{ 
-                                display: 'block', 
-                                width: '100%', 
-                                padding: '12px', 
-                                textAlign: 'center', 
+                            style={{
+                                display: 'block',
+                                width: '100%',
+                                padding: '12px',
+                                textAlign: 'center',
                                 textDecoration: 'none',
                                 marginBottom: '1rem'
                             }}
@@ -452,8 +452,7 @@ export default function Support() {
                     </div>
                 )}
             </div>
-            </div>
             <ChatWidget />
-        </div >
+        </div>
     );
 }
