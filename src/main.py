@@ -113,6 +113,32 @@ app.include_router(chamados_router)
 app.include_router(metricas_router)
 
 
+# ==================== STATIC FILES (FRONTEND) ====================
+import os
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+# Mount assets folder (JS, CSS, Images)
+# Verifica se a pasta existe para evitar erros em dev local sem build
+if os.path.exists("frontend/dist/assets"):
+    app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
+
+# Catch-all route for SPA (React Router)
+# Deve ser a ÚLTIMA rota definida para não conflitar com a API
+@app.get("/{full_path:path}")
+async def serve_frontend(full_path: str):
+    # Se for uma chamada de API que não casou com nada acima, retorna 404 da API
+    if full_path.startswith("api/") or full_path.startswith("docs") or full_path.startswith("redoc"):
+        return JSONResponse(status_code=404, content={"message": "Endpoint não encontrado"})
+
+    # Para qualquer outra rota, serve o index.html do React
+    # O React Router vai lidar com a rota no lado do cliente
+    if os.path.exists("frontend/dist/index.html"):
+        return FileResponse("frontend/dist/index.html")
+    
+    return {"message": "Frontend não encontrado. Execute 'npm run build' na pasta frontend."}
+
+
 # ==================== TRATAMENTO DE ERROS ====================
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):

@@ -67,7 +67,57 @@ def criar_chamado(
         encaminhado_para_humano=not classificacao["resolvido"],
         data_criacao=novo_chamado.data_criacao,
     )
+    )
 
+
+@router.post(
+    "/public",
+    response_model=ChamadoCreateResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def criar_chamado_publico(
+    chamado: ChamadoCreate,
+    db: Session = Depends(get_db),
+):
+    """
+    Cria um novo chamado publicamente (Autoatendimento)
+    Não requer autenticação de usuário.
+    """
+    # Verifica se cliente existe
+    cliente = db.query(Cliente).filter(Cliente.id == chamado.cliente_id).first()
+    if not cliente:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado"
+        )
+
+    # Classifica a mensagem com IA
+    classificacao = IAClassifier.classificar(chamado.mensagem, chamado.canal)
+
+    # Cria o chamado no banco (sem user_id)
+    novo_chamado = Chamado(
+        cliente_id=chamado.cliente_id,
+        user_id=None,
+        canal=chamado.canal,
+        mensagem=chamado.mensagem,
+        status="resolvido" if classificacao["resolvido"] else "encaminhado", # Se não resolvido, vai para encaminhado direto no fluxo publico? Ou aberto? O user pediu "direcionar para um atendente" (encaminhado)
+        resposta_automatica=classificacao["resposta"],
+        encaminhado_para_humano=not classificacao["resolvido"],
+    )
+
+    db.add(novo_chamado)
+    db.commit()
+    db.refresh(novo_chamado)
+
+    return ChamadoCreateResponse(
+        chamado_id=novo_chamado.id,
+        cliente_id=novo_chamado.cliente_id,
+        canal=novo_chamado.canal,
+        resposta=classificacao["resposta"],
+        resolvido_automaticamente=classificacao["resolvido"],
+        prioridade=classificacao["prioridade"],
+        encaminhado_para_humano=not classificacao["resolvido"],
+        data_criacao=novo_chamado.data_criacao,
+    )
 
 @router.get(
     "/{chamado_id}",

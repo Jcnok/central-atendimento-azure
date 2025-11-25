@@ -59,3 +59,14 @@ def obter_cliente(cliente_id: int, db: Session = Depends(get_db)):
 def listar_clientes(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     """Lista todos os clientes"""
     return db.query(Cliente).offset(skip).limit(limit).all()
+
+
+@router.get("/buscar", response_model=ClienteResponse)
+def buscar_cliente_por_email(email: str, db: Session = Depends(get_db)):
+    """Busca um cliente pelo email (Público - usado no Autoatendimento)"""
+    cliente = db.query(Cliente).filter(Cliente.email == email).first()
+    if not cliente:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado"
+        )
+    return cliente
