@@ -139,8 +139,9 @@ multidict==6.7.0
     #   yarl
 nest-asyncio==1.6.0
     # via semantic-kernel
-numpy==2.3.5
+numpy==1.26.4
     # via
+    #   -r requirements.in
     #   pgvector
     #   semantic-kernel
 openai==1.109.1

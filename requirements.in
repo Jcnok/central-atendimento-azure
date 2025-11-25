@@ -24,6 +24,7 @@ openai>=1.0.0
 tiktoken
 redis>=5.0.0
 pgvector
+numpy<2.0.0
 
 # Testing
 pytest
