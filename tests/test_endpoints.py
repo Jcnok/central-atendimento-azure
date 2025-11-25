@@ -91,7 +91,26 @@ class TestClientes:
             headers=headers,
         )
         assert response.status_code == 400
+        assert response.status_code == 400
 
+    def test_buscar_cliente_publico(self, auth_token):
+        # Cria um cliente primeiro (precisa de auth)
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        email_unico = f"publico_{uuid.uuid4().hex}@example.com"
+        client.post(
+            "/api/clientes/",
+            json={
+                "nome": "Cliente Publico",
+                "email": email_unico,
+                "telefone": "11966666666",
+            },
+            headers=headers,
+        )
+
+        # Busca sem auth (não envia headers)
+        response = client.get(f"/api/clientes/buscar?email={email_unico}")
+        assert response.status_code == 200
+        assert response.json()["email"] == email_unico
 
 class TestChamados:
     def criar_cliente(self, headers):
