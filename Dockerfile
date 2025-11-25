@@ -1,33 +1,49 @@
-# Usar uma imagem base oficial do Python. A versão 'slim' é mais leve.
+# ==================== STAGE 1: Frontend Build ====================
+FROM node:20-alpine as frontend-builder
+
+WORKDIR /app/frontend
+
+# Copy frontend dependency files
+COPY frontend/package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy frontend source code
+COPY frontend/ .
+
+# Build the React application
+RUN npm run build
+
+# ==================== STAGE 2: Backend Runtime ====================
 FROM python:3.10-slim
 
-# Definir variáveis de ambiente para Python
+# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV PATH="/opt/venv/bin:$PATH"
 
-# Definir o diretório de trabalho dentro do container
 WORKDIR /app
 
-# Instalar dependências do sistema, se necessário (ex: para psycopg2)
-# Neste caso, a imagem slim já contém o necessário, mas é uma boa prática deixar a linha comentada.
-# RUN apt-get update && apt-get install -y ...
+# Install system dependencies (if needed)
+# RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev && rm -rf /var/lib/apt/lists/*
 
-# Copiar o arquivo de dependências primeiro para aproveitar o cache do Docker
+# Copy requirements
 COPY requirements.txt .
 
-# Instalar as dependências
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Create virtual environment and install dependencies
+RUN python -m venv /opt/venv && \
+    /opt/venv/bin/pip install --no-cache-dir --upgrade pip && \
+    /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 
-# Copiar todo o código da aplicação para o diretório de trabalho
-COPY . .
+# Copy backend source code
+COPY src/ ./src/
 
-# Expor a porta que a aplicação irá rodar.
-# O Gunicorn será configurado para usar a porta 8000.
+# Copy built frontend assets from previous stage
+COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
+
+# Expose port
 EXPOSE 8000
 
-# Comando para iniciar a aplicação quando o container for executado.
-# Usamos Gunicorn para um ambiente de produção.
-# O comando é o mesmo do startup.sh, mas sem a necessidade de especificar o bind,
-# pois o docker-compose fará o mapeamento da porta.
+# Run application
 CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "src.main:app", "--bind", "0.0.0.0:8000"]

@@ -39,6 +39,12 @@ jobs:
         npm run build
         cd ..
 
+    - name: Create .env file for testing
+      run: |
+        echo "DATABASE_URL=postgresql://test:test@localhost/testdb" > .env
+        echo "SECRET_KEY=test_secret_key_for_ci" >> .env
+        echo "APP_ENV=testing" >> .env
+
     - name: Run tests
       run: |
         pytest

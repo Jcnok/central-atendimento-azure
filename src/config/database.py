@@ -1,91 +1,103 @@
 """
-Configuração de conexão com PostgreSQL via SQLAlchemy.
+Configuração de conexão com PostgreSQL via SQLAlchemy (AsyncIO).
 
 Este módulo utiliza as configurações centralizadas do `src.config.settings`
-para criar a engine e a sessão do banco de dados.
+para criar a engine e a sessão do banco de dados de forma assíncrona.
 """
 
 import logging
+from typing import AsyncGenerator
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.pool import NullPool
 
 from src.config.settings import settings
 
 logger = logging.getLogger(__name__)
 
-# ===================== ENGINE SQLALCHEMY =====================
+# ===================== ENGINE SQLALCHEMY (ASYNC) =====================
 
 try:
-    # A URL do banco de dados é convertida para string para o create_engine
-    engine = create_engine(
-        str(settings.DATABASE_URL),
+    # Garante que a URL use o driver asyncpg
+    database_url = str(settings.DATABASE_URL).replace("postgresql://", "postgresql+asyncpg://")
+    
+    engine = create_async_engine(
+        database_url,
         poolclass=NullPool,  # Para conexão limitada (ex: Azure free tier)
-        echo=False,  # Mude para True só se quiser verbose dos comandos SQL
+        echo=False,
         connect_args={
-            "connect_timeout": 10,
-            "application_name": "central-atendimento-api",
+            "server_settings": {
+                "application_name": "central-atendimento-api"
+            }
         },
     )
-    logger.info("✅ Engine SQLAlchemy criada com sucesso")
+    logger.info("✅ Engine SQLAlchemy Async criada com sucesso")
 except Exception as e:
     logger.error(f"❌ Erro ao criar engine: {str(e)}")
     raise
 
-# ===================== SESSION FACTORY =====================
+# ===================== SESSION FACTORY (ASYNC) =====================
 
-SessionLocal = sessionmaker(
-    autocommit=False, autoflush=False, bind=engine, expire_on_commit=False
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    autocommit=False,
+    autoflush=False,
+    expire_on_commit=False
 )
-
-Base = declarative_base()
 
 # ===================== DEPENDENCY FASTAPI =====================
 
 
-def get_db():
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
-    Dependência para injeção de sessão nas rotas FastAPI
-    Garante fechamento seguro e rollback em caso de erro
+    Dependência para injeção de sessão assíncrona nas rotas FastAPI
     """
-    db = SessionLocal()
-    try:
-        yield db
-    except Exception as e:
-        logger.error(f"Erro na sessão do banco: {str(e)}")
-        db.rollback()
-        raise
-    finally:
-        db.close()
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        except Exception as e:
+            logger.error(f"Erro na sessão do banco: {str(e)}")
+            await session.rollback()
+            raise
+        # O context manager do AsyncSession fecha a sessão automaticamente
 
 
 # ===================== INICIALIZAÇÃO E FINALIZAÇÃO =====================
 
 
+# ===================== BASE DECLARATIVA =====================
+
+from sqlalchemy.orm import declarative_base
+
+Base = declarative_base()
+
+# ===================== INICIALIZAÇÃO E FINALIZAÇÃO =====================
+
+
+# Importar modelos para garantir que sejam registrados no Base
 from src.models.user import User  # noqa
 from src.models.cliente import Cliente  # noqa
 from src.models.chamado import Chamado  # noqa
 
 
-def init_db():
+async def init_db():
     """
     Cria todas as tabelas definidas em Base no banco de dados atual.
-    Usar no startup da aplicação (ex: eventos FastAPI).
-    SEGURANÇA: Funciona no banco selecionado pelo ambiente (.env)
+    Usar no startup da aplicação.
     """
     try:
-        Base.metadata.create_all(bind=engine)
-        logger.info("✅ Tabelas criadas/validadas com sucesso")
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("✅ Tabelas criadas/validadas com sucesso (Async)")
     except Exception as e:
         logger.error(f"❌ Erro ao criar tabelas: {str(e)}")
         raise
 
 
-def close_db():
+async def close_db():
     """
     Fecha todas as conexões com o banco.
-    Usar no shutdown da aplicação.
     """
-    engine.dispose()
+    await engine.dispose()
     logger.info("✅ Conexões fechadas")

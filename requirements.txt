@@ -63,6 +63,9 @@ pluggy==1.6.0
     # via pytest
 psycopg2-binary==2.9.11
     # via -r requirements.in
+asyncpg==0.29.0
+aiosqlite==0.19.0
+    # via -r requirements.in
 pyasn1==0.6.1
     # via
     #   python-jose

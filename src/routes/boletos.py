@@ -18,7 +18,7 @@ class BoletoResponse(BaseModel):
 
 
 @router.post("/gerar", response_model=BoletoResponse)
-def gerar_boleto(dados: BoletoRequest):
+async def gerar_boleto(dados: BoletoRequest):
     """
     Gera uma 2ª via de boleto simulada.
     Em um cenário real, integraria com um gateway de pagamento.

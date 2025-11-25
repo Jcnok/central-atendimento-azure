@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import styles from './ChatWidget.module.css';
 
 export default function ChatWidget() {
     const [isOpen, setIsOpen] = useState(false);
@@ -7,6 +8,22 @@ export default function ChatWidget() {
     ]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
+    const messagesEndRef = useRef(null);
+    const inputRef = useRef(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages, isOpen]);
+
+    useEffect(() => {
+        if (isOpen && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [isOpen]);
 
     const handleSend = async (e) => {
         e.preventDefault();
@@ -50,82 +67,52 @@ export default function ChatWidget() {
     };
 
     return (
-        <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 1000 }}>
+        <div className={styles.chatContainer}>
             {/* Chat Window */}
             {isOpen && (
-                <div className="glass-panel" style={{
-                    width: '300px',
-                    height: '400px',
-                    marginBottom: '1rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
-                }}>
-                    <div style={{
-                        padding: '1rem',
-                        borderBottom: '1px solid var(--glass-border)',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        background: 'rgba(255,255,255,0.05)'
-                    }}>
-                        <span style={{ fontWeight: 'bold' }}>Assistente Virtual</span>
+                <div className={styles.glassPanel} role="dialog" aria-label="Assistente Virtual">
+                    <div className={styles.header}>
+                        <span className={styles.headerTitle}>Assistente Virtual</span>
                         <button
                             onClick={() => setIsOpen(false)}
-                            style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '1.2rem' }}
+                            className={styles.closeButton}
+                            aria-label="Fechar chat"
                         >
                             ×
                         </button>
                     </div>
 
-                    <div style={{ flex: 1, padding: '1rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div className={styles.messagesArea} role="log" aria-live="polite">
                         {messages.map((msg, idx) => (
-                            <div key={idx} style={{
-                                alignSelf: msg.type === 'user' ? 'flex-end' : 'flex-start',
-                                background: msg.type === 'user' ? '#3b82f6' : 'rgba(255,255,255,0.1)',
-                                padding: '8px 12px',
-                                borderRadius: '12px',
-                                maxWidth: '85%',
-                                fontSize: '0.9rem',
-                                whiteSpace: 'pre-wrap'
-                            }}>
+                            <div
+                                key={idx}
+                                className={`${styles.message} ${msg.type === 'user' ? styles.userMessage : styles.botMessage}`}
+                            >
                                 {msg.text}
                             </div>
                         ))}
-                        {loading && <div style={{ alignSelf: 'flex-start', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Digitando...</div>}
+                        {loading && <div className={styles.loading}>Digitando...</div>}
+                        <div ref={messagesEndRef} />
                     </div>
 
-                    <form onSubmit={handleSend} style={{ padding: '1rem', borderTop: '1px solid var(--glass-border)' }}>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <input
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                placeholder="Digite o protocolo..."
-                                style={{
-                                    flex: 1,
-                                    padding: '8px',
-                                    borderRadius: '6px',
-                                    border: '1px solid var(--glass-border)',
-                                    background: 'rgba(255,255,255,0.05)',
-                                    color: 'white',
-                                    fontSize: '0.9rem'
-                                }}
-                            />
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                style={{
-                                    background: '#3b82f6',
-                                    border: 'none',
-                                    borderRadius: '6px',
-                                    color: 'white',
-                                    padding: '0 12px',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                ➤
-                            </button>
-                        </div>
+                    <form onSubmit={handleSend} className={styles.inputForm}>
+                        <input
+                            ref={inputRef}
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Digite o protocolo..."
+                            className={styles.input}
+                            aria-label="Digite sua mensagem"
+                            disabled={loading}
+                        />
+                        <button
+                            type="submit"
+                            disabled={loading || !input.trim()}
+                            className={styles.sendButton}
+                            aria-label="Enviar mensagem"
+                        >
+                            ➤
+                        </button>
                     </form>
                 </div>
             )}
@@ -133,23 +120,9 @@ export default function ChatWidget() {
             {/* Floating Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                style={{
-                    width: '60px',
-                    height: '60px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                    border: 'none',
-                    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1.5rem',
-                    color: 'white',
-                    transition: 'transform 0.2s'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                className={styles.toggleButton}
+                aria-label={isOpen ? "Fechar chat" : "Abrir chat de suporte"}
+                aria-expanded={isOpen}
             >
                 {isOpen ? '💬' : '🤖'}
             </button>

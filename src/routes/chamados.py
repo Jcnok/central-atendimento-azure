@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import desc
-from sqlalchemy.orm import Session
+from sqlalchemy import desc, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
 from src.models.chamado import Chamado
@@ -23,9 +23,9 @@ router = APIRouter(prefix="/chamados", tags=["Chamados"])
     response_model=ChamadoCreateResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def criar_chamado(
+async def criar_chamado(
     chamado: ChamadoCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     """
@@ -33,13 +33,17 @@ def criar_chamado(
     Automaticamente classifica com IA e decide se resolve ou encaminha
     """
     # Verifica se cliente existe
-    cliente = db.query(Cliente).filter(Cliente.id == chamado.cliente_id).first()
+    result = await db.execute(select(Cliente).filter(Cliente.id == chamado.cliente_id))
+    cliente = result.scalars().first()
+    
     if not cliente:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado"
         )
 
     # Classifica a mensagem com IA
+    # Nota: Se IAClassifier.classificar for bloqueante (requests sync), deveria rodar em threadpool ou ser async
+    # Assumindo que é sync por enquanto, mas rápido. Se for lento, precisa de run_in_executor.
     classificacao = IAClassifier.classificar(chamado.mensagem, chamado.canal)
 
     # Cria o chamado no banco
@@ -54,8 +58,8 @@ def criar_chamado(
     )
 
     db.add(novo_chamado)
-    db.commit()
-    db.refresh(novo_chamado)
+    await db.commit()
+    await db.refresh(novo_chamado)
 
     return ChamadoCreateResponse(
         chamado_id=novo_chamado.id,
@@ -75,16 +79,18 @@ def criar_chamado(
     response_model=ChamadoCreateResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def criar_chamado_publico(
+async def criar_chamado_publico(
     chamado: ChamadoCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Cria um novo chamado publicamente (Autoatendimento)
     Não requer autenticação de usuário.
     """
     # Verifica se cliente existe
-    cliente = db.query(Cliente).filter(Cliente.id == chamado.cliente_id).first()
+    result = await db.execute(select(Cliente).filter(Cliente.id == chamado.cliente_id))
+    cliente = result.scalars().first()
+    
     if not cliente:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado"
@@ -99,14 +105,14 @@ def criar_chamado_publico(
         user_id=None,
         canal=chamado.canal,
         mensagem=chamado.mensagem,
-        status="resolvido" if classificacao["resolvido"] else "encaminhado", # Se não resolvido, vai para encaminhado direto no fluxo publico? Ou aberto? O user pediu "direcionar para um atendente" (encaminhado)
+        status="resolvido" if classificacao["resolvido"] else "encaminhado",
         resposta_automatica=classificacao["resposta"],
         encaminhado_para_humano=not classificacao["resolvido"],
     )
 
     db.add(novo_chamado)
-    db.commit()
-    db.refresh(novo_chamado)
+    await db.commit()
+    await db.refresh(novo_chamado)
 
     return ChamadoCreateResponse(
         chamado_id=novo_chamado.id,
@@ -124,15 +130,17 @@ def criar_chamado_publico(
     "/public/{chamado_id}",
     response_model=ChamadoResponse,
 )
-def obter_chamado_publico(
+async def obter_chamado_publico(
     chamado_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Obtém detalhes de um chamado publicamente (Autoatendimento/Chat Widget)
     Não requer autenticação de usuário.
     """
-    chamado = db.query(Chamado).filter(Chamado.id == chamado_id).first()
+    result = await db.execute(select(Chamado).filter(Chamado.id == chamado_id))
+    chamado = result.scalars().first()
+    
     if not chamado:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Chamado não encontrado"
@@ -145,9 +153,11 @@ def obter_chamado_publico(
     response_model=ChamadoResponse,
     dependencies=[Depends(get_current_user)],
 )
-def obter_chamado(chamado_id: int, db: Session = Depends(get_db)):
+async def obter_chamado(chamado_id: int, db: AsyncSession = Depends(get_db)):
     """Obtém informações de um chamado específico"""
-    chamado = db.query(Chamado).filter(Chamado.id == chamado_id).first()
+    result = await db.execute(select(Chamado).filter(Chamado.id == chamado_id))
+    chamado = result.scalars().first()
+    
     if not chamado:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Chamado não encontrado"
@@ -160,18 +170,18 @@ def obter_chamado(chamado_id: int, db: Session = Depends(get_db)):
     response_model=list[ChamadoResponse],
     dependencies=[Depends(get_current_user)],
 )
-def listar_chamados(
+async def listar_chamados(
     status_filtro: str = None,
     canal: str = None,
     skip: int = 0,
     limit: int = 10,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Lista chamados com filtros opcionais
     Filtros: status (aberto, resolvido, encaminhado), canal (site, whatsapp, email)
     """
-    query = db.query(Chamado)
+    query = select(Chamado)
 
     if status_filtro:
         query = query.filter(Chamado.status == status_filtro)
@@ -179,9 +189,11 @@ def listar_chamados(
     if canal:
         query = query.filter(Chamado.canal == canal)
 
-    chamados = (
-        query.order_by(desc(Chamado.data_criacao)).offset(skip).limit(limit).all()
-    )
+    query = query.order_by(desc(Chamado.data_criacao)).offset(skip).limit(limit)
+    
+    result = await db.execute(query)
+    chamados = result.scalars().all()
+    
     return chamados
 
 
@@ -190,11 +202,13 @@ def listar_chamados(
     response_model=ChamadoResponse,
     dependencies=[Depends(get_current_user)],
 )
-def atualizar_chamado_status(
-    chamado_id: int, novo_status: str, db: Session = Depends(get_db)
+async def atualizar_chamado_status(
+    chamado_id: int, novo_status: str, db: AsyncSession = Depends(get_db)
 ):
     """Atualiza o status de um chamado"""
-    chamado = db.query(Chamado).filter(Chamado.id == chamado_id).first()
+    result = await db.execute(select(Chamado).filter(Chamado.id == chamado_id))
+    chamado = result.scalars().first()
+    
     if not chamado:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Chamado não encontrado"
@@ -209,8 +223,8 @@ def atualizar_chamado_status(
 
     chamado.status = novo_status
     chamado.data_atualizacao = datetime.now()
-    db.commit()
-    db.refresh(chamado)
+    await db.commit()
+    await db.refresh(chamado)
 
     return chamado
 
@@ -220,23 +234,27 @@ def atualizar_chamado_status(
     response_model=list[ChamadoResponse],
     dependencies=[Depends(get_current_user)],
 )
-def listar_chamados_por_cliente(
-    cliente_id: int, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)
+async def listar_chamados_por_cliente(
+    cliente_id: int, skip: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)
 ):
     """Lista todos os chamados de um cliente específico"""
-    cliente = db.query(Cliente).filter(Cliente.id == cliente_id).first()
+    result = await db.execute(select(Cliente).filter(Cliente.id == cliente_id))
+    cliente = result.scalars().first()
+    
     if not cliente:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado"
         )
 
-    chamados = (
-        db.query(Chamado)
+    query = (
+        select(Chamado)
         .filter(Chamado.cliente_id == cliente_id)
         .order_by(desc(Chamado.data_criacao))
         .offset(skip)
         .limit(limit)
-        .all()
     )
+    
+    result = await db.execute(query)
+    chamados = result.scalars().all()
 
     return chamados

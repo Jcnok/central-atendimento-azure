@@ -31,11 +31,11 @@ async def lifespan(app: FastAPI):
     Executa tarefas de inicialização (startup) e finalização (shutdown).
     """
     logger.info("🚀 Iniciando aplicação...")
-    init_db()  # Inicializa o banco de dados
+    await init_db()  # Inicializa o banco de dados (Async)
     logger.info("✅ Banco de dados inicializado!")
     yield  # A aplicação roda aqui
     logger.info("🛑 Encerrando aplicação...")
-    close_db()  # Fecha as conexões com o banco de dados
+    await close_db()  # Fecha as conexões com o banco de dados (Async)
 
 
 from fastapi.openapi.utils import get_openapi

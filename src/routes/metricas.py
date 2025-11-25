@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
 from src.models.chamado import Chamado
@@ -11,24 +11,24 @@ router = APIRouter(prefix="/metricas", tags=["Métricas"])
 
 
 @router.get("/", response_model=dict, dependencies=[Depends(get_current_user)])
-def obter_metricas(db: Session = Depends(get_db)):
+async def obter_metricas(db: AsyncSession = Depends(get_db)):
     """Retorna métricas gerais de atendimento"""
 
-    total_chamados = db.query(func.count(Chamado.id)).scalar() or 0
-    chamados_automaticos = (
-        db.query(func.count(Chamado.id))
-        .filter(Chamado.encaminhado_para_humano == False)
-        .scalar()
-        or 0
+    total_chamados_result = await db.execute(select(func.count(Chamado.id)))
+    total_chamados = total_chamados_result.scalar() or 0
+    
+    chamados_automaticos_result = await db.execute(
+        select(func.count(Chamado.id)).filter(Chamado.encaminhado_para_humano == False)
     )
-    chamados_encaminhados = (
-        db.query(func.count(Chamado.id))
-        .filter(Chamado.encaminhado_para_humano == True)
-        .scalar()
-        or 0
+    chamados_automaticos = chamados_automaticos_result.scalar() or 0
+    
+    chamados_encaminhados_result = await db.execute(
+        select(func.count(Chamado.id)).filter(Chamado.encaminhado_para_humano == True)
     )
+    chamados_encaminhados = chamados_encaminhados_result.scalar() or 0
 
-    total_clientes = db.query(func.count(Cliente.id)).scalar() or 0
+    total_clientes_result = await db.execute(select(func.count(Cliente.id)))
+    total_clientes = total_clientes_result.scalar() or 0
 
     taxa_resolucao = (
         (chamados_automaticos / total_chamados * 100) if total_chamados > 0 else 0
@@ -47,22 +47,22 @@ def obter_metricas(db: Session = Depends(get_db)):
 @router.get(
     "/por-canal", response_model=dict, dependencies=[Depends(get_current_user)]
 )
-def metricas_por_canal(db: Session = Depends(get_db)):
+async def metricas_por_canal(db: AsyncSession = Depends(get_db)):
     """Retorna métricas detalhadas por canal"""
     canais = ["site", "whatsapp", "email"]
     resultado = {}
 
     for canal in canais:
-        total = (
-            db.query(func.count(Chamado.id)).filter(Chamado.canal == canal).scalar()
-            or 0
+        total_result = await db.execute(
+            select(func.count(Chamado.id)).filter(Chamado.canal == canal)
         )
-        automaticos = (
-            db.query(func.count(Chamado.id))
+        total = total_result.scalar() or 0
+        
+        automaticos_result = await db.execute(
+            select(func.count(Chamado.id))
             .filter(Chamado.canal == canal, Chamado.encaminhado_para_humano == False)
-            .scalar()
-            or 0
         )
+        automaticos = automaticos_result.scalar() or 0
 
         resultado[canal] = {
             "total": total,
@@ -76,16 +76,16 @@ def metricas_por_canal(db: Session = Depends(get_db)):
 @router.get(
     "/por-status", response_model=dict, dependencies=[Depends(get_current_user)]
 )
-def metricas_por_status(db: Session = Depends(get_db)):
+async def metricas_por_status(db: AsyncSession = Depends(get_db)):
     """Retorna distribuição de chamados por status"""
     statuses = ["aberto", "resolvido", "encaminhado"]
     resultado = {}
 
     for status in statuses:
-        count = (
-            db.query(func.count(Chamado.id)).filter(Chamado.status == status).scalar()
-            or 0
+        count_result = await db.execute(
+            select(func.count(Chamado.id)).filter(Chamado.status == status)
         )
+        count = count_result.scalar() or 0
         resultado[status] = count
 
     return resultado
