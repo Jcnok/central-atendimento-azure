@@ -2,16 +2,17 @@
 
 <div align="center">
 
-![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
-![Python](https://img.shields.io/badge/python-3.10+-blue.svg?style=for-the-badge&logo=python&logoColor=white)
-![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
-![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
-![Azure](https://img.shields.io/badge/azure-%230072C6.svg?style=for-the-badge&logo=microsoftazure&logoColor=white)
-![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.121.2-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![React](https://img.shields.io/badge/React-19.2.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Azure App Service](https://img.shields.io/badge/Azure_App_Service-Deployed-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
-![Build Status](https://img.shields.io/github/actions/workflow/status/Jcnok/central-atendimento-azure/deploy.yml?style=for-the-badge)
-![License](https://img.shields.io/github/license/Jcnok/central-atendimento-azure?style=for-the-badge)
-![Repo Size](https://img.shields.io/github/repo-size/Jcnok/central-atendimento-azure?style=for-the-badge)
+![Build Status](https://img.shields.io/github/actions/workflow/status/Jcnok/central-atendimento-azure/deploy.yml?style=for-the-badge&logo=githubactions&logoColor=white)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
+![Code Size](https://img.shields.io/github/languages/code-size/Jcnok/central-atendimento-azure?style=for-the-badge)
+![Last Commit](https://img.shields.io/github/last-commit/Jcnok/central-atendimento-azure?style=for-the-badge)
 
 </div>
 
