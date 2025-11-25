@@ -119,6 +119,27 @@ def criar_chamado_publico(
         data_criacao=novo_chamado.data_criacao,
     )
 
+
+@router.get(
+    "/public/{chamado_id}",
+    response_model=ChamadoResponse,
+)
+def obter_chamado_publico(
+    chamado_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Obtém detalhes de um chamado publicamente (Autoatendimento/Chat Widget)
+    Não requer autenticação de usuário.
+    """
+    chamado = db.query(Chamado).filter(Chamado.id == chamado_id).first()
+    if not chamado:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Chamado não encontrado"
+        )
+    return chamado
+
+
 @router.get(
     "/{chamado_id}",
     response_model=ChamadoResponse,

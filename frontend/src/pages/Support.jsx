@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import ChatWidget from '../components/ChatWidget';
 
 export default function Support() {
     const [step, setStep] = useState(1);
@@ -18,7 +19,9 @@ export default function Support() {
             const response = await fetch(`/api/clientes/buscar?email=${email}`);
             if (!response.ok) {
                 if (response.status === 404) {
-                    throw new Error('Email não encontrado. Por favor, entre em contato com nosso time de vendas.');
+                    // Show 0800 card instead of throwing error
+                    setStep('non-client');
+                    return;
                 }
                 throw new Error('Erro ao buscar cliente.');
             }
@@ -117,13 +120,47 @@ export default function Support() {
                         >
                             {loading ? 'Verificando...' : 'Iniciar Atendimento'}
                         </button>
-
-                        <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-                            <Link to="/login" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.9rem' }}>
-                                Sou um administrador
-                            </Link>
-                        </div>
                     </form>
+                )}
+
+                {/* STEP: Non-Client (0800) */}
+                {step === 'non-client' && (
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📞</div>
+                        <h2 style={{ marginBottom: '1rem' }}>Cadastro não encontrado</h2>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+                            Não localizamos seu e-mail em nossa base de clientes.
+                            Para suporte, entre em contato com nossa central:
+                        </p>
+
+                        <div style={{
+                            background: 'rgba(59, 130, 246, 0.1)',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            borderRadius: '12px',
+                            padding: '1.5rem',
+                            marginBottom: '2rem'
+                        }}>
+                            <div style={{ fontSize: '0.9rem', color: '#60a5fa', marginBottom: '0.5rem' }}>Central de Atendimento</div>
+                            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'white' }}>0800 123 4567</div>
+                        </div>
+
+                        <button
+                            onClick={() => {
+                                setStep(1);
+                                setEmail('');
+                            }}
+                            style={{
+                                background: 'transparent',
+                                border: '1px solid var(--glass-border)',
+                                color: 'white',
+                                padding: '10px 20px',
+                                borderRadius: '8px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Tentar outro e-mail
+                        </button>
+                    </div>
                 )}
 
                 {/* STEP 2: Chat / Problem Description */}
