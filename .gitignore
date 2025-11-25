@@ -97,3 +97,5 @@ yarn.lock
 .cache/
 .tmp/
 .env.test
+.env.agents
+.env.agents
