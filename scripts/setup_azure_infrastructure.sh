@@ -5,8 +5,8 @@
 set -e
 
 # Configuration
-RESOURCE_GROUP="${RESOURCE_GROUP:-rg-central-atendimento}"
-LOCATION="${LOCATION:-brazilsouth}"
+RESOURCE_GROUP="${RESOURCE_GROUP:-central-atendimento-rg}"
+LOCATION="${LOCATION:-Canada-Central}"
 OPENAI_NAME="${OPENAI_NAME:-openai-central-atendimento}"
 REDIS_NAME="${REDIS_NAME:-redis-central-atendimento}"
 APP_INSIGHTS_NAME="${APP_INSIGHTS_NAME:-appi-central-atendimento}"

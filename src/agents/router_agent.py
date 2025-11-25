@@ -83,14 +83,19 @@ REGRAS:
             chat_history.add_system_message(self.SYSTEM_PROMPT)
             chat_history.add_user_message(user_prompt)
             
-            # Get classification from LLM
-            chat_service = self.kernel.get_service("router")
+            # Get classification from LLM using service directly
+            chat_service = self.kernel.get_service(service_id="router")
+            
+            # Create execution settings
+            from semantic_kernel.connectors.ai.open_ai import AzureChatPromptExecutionSettings
+            settings = AzureChatPromptExecutionSettings(
+                temperature=0.3,  # Low temperature for consistent classification
+                max_tokens=150
+            )
+            
             response = await chat_service.get_chat_message_content(
                 chat_history=chat_history,
-                settings=chat_service.get_prompt_execution_settings_class()(
-                    temperature=0.3,  # Low temperature for consistent classification
-                    max_tokens=150
-                )
+                settings=settings
             )
             
             # Parse JSON response
