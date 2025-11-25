@@ -444,11 +444,7 @@ export default function Support() {
                             Nova Solicitação
                         </button>
 
-                        <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-                            <Link to="/login" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.9rem' }}>
-                                Voltar para Login
-                            </Link>
-                        </div>
+
                     </div>
                 )}
             </div>

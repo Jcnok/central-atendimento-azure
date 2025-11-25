@@ -1,454 +1,197 @@
-# 🎯 Central de Atendimento Automática com IA
+# 🚀 Central de Atendimento Inteligente (Azure + AI)
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.121+-green?logo=fastapi)
-[![Deploy to Azure App Service](https://github.com/Jcnok/central-atendimento-azure/actions/workflows/deploy.yml/badge.svg)](https://github.com/Jcnok/central-atendimento-azure/actions)
-![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-red.svg)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-12+-blue.svg?logo=postgresql)
+![React](https://img.shields.io/badge/React-18+-61DAFB?logo=react)
+![Azure](https://img.shields.io/badge/Azure-App%20Service-0078D4?logo=microsoftazure)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-336791?logo=postgresql)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-Uma API de back-end robusta para uma central de atendimento, capaz de processar solicitações de múltiplos canais com classificação e resposta por IA.
-
-**Desenvolvido para o Hackathon Microsoft Innovation Challenge - Novembro 2025**
+Uma plataforma completa de **Orquestração de Atendimento ao Cliente** impulsionada por Inteligência Artificial. Projetada para escalar, reduzir custos operacionais e oferecer suporte 24/7 através de múltiplos canais.
 
 ---
 
 ## 📋 Sumário
 - [Visão Geral](#-visão-geral)
-- [Tecnologias](#-tecnologias)
-- [Arquitetura](#-arquitetura)
-- [🚀 Começando: Guia de Instalação](#-começando-guia-de-instalação)
-- [🐳 Rodando com Docker Compose](#-rodando-com-docker-compose)
-- [⚙️ Variáveis de Ambiente](#-variáveis-de-ambiente)
-- [📡 Testando a API: Guia Prático](#-testando-a-api-guia-prático)
-- [☁️ Deploy e CI/CD na Azure](#-deploy-e-cicd-na-azure)
-- [🤔 Solução de Problemas (Troubleshooting)](#-solução-de-problemas-troubleshooting)
-- [🧪 Testes Automatizados](#-testes-automatizados)
-- [📁 Estrutura do Projeto](#-estrutura-do-projeto)
-- [📈 Roadmap](#-roadmap)
-- [📝 Licença e Contato](#-licença-e-contato)
+- [Arquitetura da Solução](#-arquitetura-da-solução)
+- [Stack Tecnológica](#-stack-tecnológica)
+- [Funcionalidades Principais](#-funcionalidades-principais)
+- [Guia de Instalação (Local)](#-guia-de-instalação-local)
+- [Deploy na Azure](#-deploy-na-azure)
+- [Documentação da API](#-documentação-da-api)
+- [Estrutura do Projeto](#-estrutura-do-projeto)
 
 ---
 
 ## 🌟 Visão Geral
 
-Este projeto oferece uma solução escalável para empresas que lidam com um alto volume de solicitações de clientes em diversos canais (site, WhatsApp, e-mail).
+Este projeto foi desenvolvido para o **Hackathon Microsoft Innovation Challenge (Novembro 2025)**. Ele resolve o problema de gargalos em centrais de atendimento tradicionais, onde agentes humanos perdem tempo com triagem e dúvidas repetitivas.
 
-#### O Problema
-
--   Processamento manual e lento de solicitações.
--   Dificuldade em oferecer suporte 24/7.
--   Custos operacionais elevados com atendimento humano para dúvidas repetitivas.
-
-#### A Solução
-
-Um orquestrador de atendimento que automatiza o fluxo de trabalho:
--   ✅ **Recebe** solicitações de múltiplos canais.
--   ✅ **Classifica** a intenção do cliente com IA em tempo real.
--   ✅ **Responde** automaticamente a dúvidas frequentes (ex: segunda via de boleto).
--   ✅ **Encaminha** casos complexos e priorizados para análise humana.
--   ✅ **Gera métricas** sobre os atendimentos para análise de performance.
+### A Solução
+Um sistema híbrido que utiliza IA para:
+1.  **Classificar** automaticamente a intenção do cliente.
+2.  **Resolver** demandas simples (ex: 2ª via de boleto, status de pedido) sem intervenção humana.
+3.  **Encaminhar** casos complexos para filas especializadas com todo o contexto já coletado.
 
 ---
 
-## 🛠️ Tecnologias
+## 🏗️ Arquitetura da Solução
 
-| Área | Tecnologia | Versão/Descrição |
-| :--- | :--- | :--- |
-| **Linguagem** | Python | 3.10+ |
-| **Framework Web** | FastAPI | ASGI, alta performance |
-| **Banco de Dados** | PostgreSQL | Banco de dados relacional |
-| **ORM** | SQLAlchemy | v2.0, para manipulação de dados segura|
-| **Validação**| Pydantic | v2, para validação e configurações |
-| **Containerização** | Docker / Docker Compose | Ambiente de desenvolvimento padronizado. |
-| **Servidor** | Uvicorn & Gunicorn| Servidores ASGI/WSGI para dev/prod |
-| **Testes** | Pytest | Testes automatizados com BD em memória |
-| **Cloud** | Azure App Service | Hospedagem da aplicação |
-| **CI/CD** | GitHub Actions | Automação de testes e deploy. |
+A aplicação segue uma arquitetura **Monolítica Modular**, otimizada para deploy simplificado na Azure App Service, mas mantendo separação clara de responsabilidades.
 
----
-
-## 🏗️ Arquitetura
-
-A arquitetura segue um padrão de camadas desacoplado, facilitando a manutenção e a escalabilidade.
-
+```mermaid
+graph TD
+    Client[Cliente / Frontend] -->|HTTPS| AzureApp[Azure App Service]
+    
+    subgraph "Azure App Service (Linux)"
+        FastAPI[Backend FastAPI]
+        React[Frontend React (Static)]
+        FastAPI -->|Serve| React
+    end
+    
+    FastAPI -->|Persistência| DB[(Azure Database for PostgreSQL)]
+    FastAPI -->|Autenticação| JWT[JWT Auth Service]
+    FastAPI -->|Classificação| AI[AI Service Module]
 ```
-┌──────────────────────────────────┐
-│         Canais de Entrada        │
-│    (Frontend, WhatsApp, etc.)    │
-└──────────────┬───────────────────┘
-               │ HTTP POST
-               ▼
-┌──────────────────────────────────┐
-│     Azure App Service (FastAPI)  │
-│     - API Gateway                │
-│     - Lógica de Negócio          │
-└──────────────┬───────────────────┘
-      ┌────────┴─────────┐
-      ▼                  ▼
-┌────────────────┐   ┌─────────────────┐
-│ IA Classifier  │   │   PostgreSQL DB │
-│ (Classificação)│   │  (Azure/Local)  │
-└────────────────┘   └─────────────────┘
-```
+
 ---
 
-## 🚀 Começando: Guia de Instalação
+## 🛠️ Stack Tecnológica
 
-Siga os passos abaixo para ter o projeto rodando localmente **sem Docker**.
+### Backend (API & Core)
+-   **Linguagem**: Python 3.10+
+-   **Framework**: FastAPI (Alta performance, assíncrono)
+-   **ORM**: SQLAlchemy 2.0 (Async/Sync)
+-   **Validação**: Pydantic V2
+-   **Autenticação**: OAuth2 com JWT (JSON Web Tokens)
 
-#### 1. Pré-requisitos
+### Frontend (Interface)
+-   **Framework**: React 18
+-   **Build Tool**: Vite
+-   **Estilização**: CSS Modules / Glassmorphism UI
+-   **Router**: React Router v6
 
--   [Python 3.10+](https://www.python.org/)
--   [Git](https://git-scm.com/)
--   Um servidor PostgreSQL rodando (localmente ou na nuvem).
+### Infraestrutura & DevOps
+-   **Cloud**: Microsoft Azure (App Service + PostgreSQL Flexible Server)
+-   **CI/CD**: GitHub Actions (Pipeline automatizado de Build & Deploy)
+-   **Containerização**: Docker (para desenvolvimento local)
 
-#### 2. Instalação
+---
 
+## ✨ Funcionalidades Principais
+
+### 1. Portal de Autoatendimento (`/support`)
+-   **Acesso Público**: Interface amigável para clientes abrirem chamados.
+-   **Chat Widget com IA**: Bot flutuante para consulta rápida de status de tickets.
+-   **Geração de Boletos**: Módulo de autoatendimento para emissão de 2ª via de faturas.
+-   **Segurança**: Fluxos segregados para clientes e não-clientes (tratativa de leads).
+
+### 2. Painel Administrativo (`/dashboard`)
+-   **Métricas em Tempo Real**: KPIs de volume de chamados, taxa de resolução por IA e novos clientes.
+-   **Gestão de Tickets**: Kanban/Lista para agentes humanos tratarem casos escalados.
+-   **Gestão de Clientes**: CRM básico para cadastro e histórico de clientes.
+
+### 3. Inteligência Artificial
+-   **Classificação Automática**: Analisa o texto da solicitação e define a categoria (Financeiro, Suporte Técnico, Vendas).
+-   **Respostas Sugeridas**: A IA propõe respostas baseadas em histórico e base de conhecimento.
+
+---
+
+## 🚀 Guia de Instalação (Local)
+
+### Pré-requisitos
+-   Python 3.10+
+-   Node.js 18+
+-   PostgreSQL
+
+### Passo 1: Backend
 ```bash
-# 1. Clone o repositório
+# Clone o repositório
 git clone https://github.com/Jcnok/central-atendimento-azure.git
 cd central-atendimento-azure
 
-# 2. Crie e ative um ambiente virtual
-# No Linux/macOS
-python3 -m venv venv
-source venv/bin/activate
-
-# No Windows
+# Crie o ambiente virtual
 python -m venv venv
-virtualenv\Scripts\activate
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate   # Windows
 
-# 3. Instale as dependências
+# Instale as dependências
 pip install -r requirements.txt
-```
 
-#### 3. Configuração do Ambiente
-
-A aplicação precisa de variáveis de ambiente para rodar.
-
-```bash
-# Copie o arquivo de exemplo. Este será seu arquivo de configuração local.
+# Configure o .env (use o .env.example como base)
 cp .env.example .env
-```
-Agora, **abra o arquivo `.env`** e preencha as variáveis obrigatórias. Para o setup local, você precisará da `DATABASE_URL` apontando para seu banco de dados local e de uma `SECRET_KEY`.
 
-#### 4. Execução
-
-Com tudo configurado, inicie a aplicação:
-```bash
-# Inicie o servidor em modo de desenvolvimento com auto-reload
+# Inicie o servidor
 uvicorn src.main:app --reload
 ```
-A API estará disponível em `http://127.0.0.1:8000`.
+
+### Passo 2: Frontend
+```bash
+cd frontend
+
+# Instale as dependências
+npm install
+
+# Inicie o servidor de desenvolvimento
+npm run dev
+```
+Acesse: `http://localhost:5173`
 
 ---
 
-## 🐳 Rodando com Docker Compose
+## ☁️ Deploy na Azure
 
-Esta é a forma **recomendada e mais simples** para rodar o ambiente de desenvolvimento. O Docker Compose irá orquestrar a API e o banco de dados automaticamente.
+O projeto conta com um pipeline de CI/CD configurado em `.github/workflows/deploy.yml`.
 
-### 1. Pré-requisitos
-- [Docker](https://www.docker.com/products/docker-desktop/) e Docker Compose instalados.
-
-### 2. Configuração
-```bash
-# 1. Clone o repositório (se ainda não o fez)
-git clone https://github.com/Jcnok/central-atendimento-azure.git
-cd central-atendimento-azure
-
-# 2. Crie seu arquivo de ambiente a partir do exemplo
-cp .env.example .env
-```
-**Nenhuma alteração é necessária no arquivo `.env` para o Docker Compose funcionar**, pois ele já vem pré-configurado para o ambiente Docker.
-
-### 3. Execução
-```bash
-# Suba os containers da API e do banco de dados em modo "detached" (-d)
-docker-compose up --build -d
-```
-- O comando `--build` garante que a imagem da sua API será reconstruída se houver alterações no `Dockerfile` ou no código-fonte.
-- O `-d` faz com que os containers rodem em segundo plano.
-
-A API estará disponível em `http://127.0.0.1:8000`.
-
-### Comandos Úteis do Docker Compose
-- **Parar os containers**: `docker-compose down`
-- **Ver os logs da API**: `docker-compose logs -f api`
-- **Acessar o shell dentro do container da API**: `docker-compose exec api bash`
+1.  **Infraestrutura**: Crie um **Web App (App Service)** e um **PostgreSQL Flexible Server** na Azure.
+2.  **Configuração**: No App Service, vá em *Settings > Configuration* e adicione as variáveis de ambiente (`DATABASE_URL`, `SECRET_KEY`, etc.).
+3.  **Deploy**: Qualquer push na branch `master` dispara o build do React, o setup do Python e o deploy automático.
 
 ---
 
-## ⚙️ Variáveis de Ambiente
+## 📚 Documentação da API
 
-As configurações são carregadas do arquivo `.env`.
+A documentação interativa (Swagger UI) é gerada automaticamente pelo FastAPI.
 
-| Variável | Obrigatório? | Descrição | Exemplo |
-| :--- | :---: | :--- | :--- |
-| `DATABASE_URL` | **Sim** | String de conexão com o PostgreSQL. | `postgresql://user:pass@host:port/db` |
-| `SECRET_KEY` | **Sim** | Chave secreta para assinar os tokens JWT. | `uma_chave_super_secreta_e_segura` |
-| `ALGORITHM` | Não | Algoritmo de assinatura do token JWT. | `HS256` |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | Não | Tempo de expiração do token de acesso. | `30` |
-| `POSTGRES_USER` | **Sim** (Docker) | Usuário do banco de dados para o container. | `admin` |
-| `POSTGRES_PASSWORD` | **Sim** (Docker) | Senha do banco de dados para o container. | `admin` |
-| `POSTGRES_DB` | **Sim** (Docker) | Nome do banco de dados a ser criado. | `central_atendimento_db` |
+-   **Local**: `http://localhost:8000/docs`
+-   **Produção**: `https://seu-app.azurewebsites.net/docs`
 
-<details>
-<summary><strong>Dica de Segurança para a SECRET_KEY</strong></summary>
+### Endpoints Principais
 
-Nunca use chaves fracas ou exemplos em produção. Para gerar uma chave forte e aleatória, use o seguinte comando no seu terminal e copie o resultado para a sua variável `SECRET_KEY` no arquivo `.env`:
-
-```bash
-openssl rand -hex 32
-```
-</details>
-
----
-
-## 📡 Testando a API: Guia Prático
-
-Para interagir com os endpoints, especialmente os protegidos, siga este guia passo a passo usando a documentação interativa do Swagger UI.
-
-1.  **Acesse a Documentação**
-    -   Com a aplicação rodando, abra o seu navegador em: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-
-2.  **Crie uma Conta de Usuário**
-    -   Vá até o endpoint `POST /auth/signup`.
-    -   Clique em "Try it out".
-    -   Preencha o `username`, `email` e `password` no corpo da requisição e clique em "Execute".
-    -   Você deve receber uma resposta com um `access_token`. **Você não precisa copiar este token inicial**.
-
-3.  **Autorize sua Sessão no Swagger UI**
-    -   No topo da página, clique no botão verde **"Authorize"**.
-    -   Uma janela pop-up chamada "Available authorizations" aparecerá.
-    -   No formulário, digite o `username` e `password` que você acabou de criar.
-    -   **Ignore os campos `client_id` e `client_secret`**. Eles não são usados neste projeto.
-    -   Clique no botão azul **"Authorize"** na parte inferior da janela.
-    -   Pode fechar a janela (botão "Close"). Agora você verá um ícone de cadeado fechado, indicando que sua sessão está autenticada.
-
-4.  **Teste um Endpoint Protegido**
-    -   Agora você pode testar qualquer endpoint protegido, como `POST /clientes/`.
-    -   Clique em "Try it out", preencha os dados de um cliente e clique em "Execute".
-    -   A requisição agora será enviada com o cabeçalho de autorização correto, e você deve receber uma resposta `201 Created`.
-
----
-
-## ☁️ Deploy e CI/CD na Azure
-
-Este guia descreve o processo completo para fazer o deploy da aplicação na Azure com um pipeline de CI/CD automatizado usando GitHub Actions.
-
-### Visão Geral do Processo
-1.  **Provisionar Recursos na Azure**: Criar a infraestrutura na nuvem (Banco de Dados e App Service).
-2.  **Configurar a Conexão Segura**: Criar um Service Principal para permitir que o GitHub se autentique no Azure.
-3.  **Configurar o Pipeline**: Apontar o workflow do GitHub Actions para os recursos criados.
-4.  **Configurar a Aplicação na Azure**: Adicionar as variáveis de ambiente no App Service.
-5.  **Ativar o Pipeline**: Fazer um `push` para a branch `master` para iniciar o deploy.
-
-### Passo 1: Provisionar Recursos na Azure (CLI)
-
-A forma mais rápida de criar os recursos necessários é via Azure CLI.
-
-```bash
-# Faça o login na sua conta Azure
-az login
-
-# --- CRIE O GRUPO DE RECURSOS E O BANCO DE DADOS ---
-# Defina as variáveis para seus recursos
-RESOURCE_GROUP="central-atendimento-rg"
-LOCATION="canadacentral"
-POSTGRES_SERVER_NAME="pg-central-atendimento-$RANDOM"
-POSTGRES_DB_NAME="central_atendimento_db"
-ADMIN_USER="dbadmin"
-ADMIN_PASSWORD="SuaSenhaSuperForte123!" # ATENÇÃO: Use uma senha forte e segura!
-
-# Crie o grupo de recursos
-az group create --name $RESOURCE_GROUP --location $LOCATION
-
-# Crie o servidor PostgreSQL Flexível
-az postgres flexible-server create \
-  --resource-group $RESOURCE_GROUP \
-  --name $POSTGRES_SERVER_NAME \
-  --location $LOCATION \
-  --admin-user $ADMIN_USER \
-  --admin-password $ADMIN_PASSWORD \
-  --sku-name Standard_B1ms \
-  --tier Burstable \
-  --public-access 0.0.0.0 \
-  --storage-size 32 \
-  --version 14
-
-# Crie o banco de dados dentro do servidor
-az postgres flexible-server db create \
-  --resource-group $RESOURCE_GROUP \
-  --server-name $POSTGRES_SERVER_NAME \
-  --database-name $POSTGRES_DB_NAME
-
-# --- CRIE O APP SERVICE ---
-# Defina um nome único para sua aplicação web
-WEBAPP_NAME="app-central-atendimento-$RANDOM"
-
-# Registre o provedor de recursos da web (necessário apenas uma vez por assinatura)
-az provider register --namespace Microsoft.Web
-
-# Crie o App Service
-az webapp up \
-  --resource-group $RESOURCE_GROUP \
-  --name $WEBAPP_NAME \
-  --sku B1 \
-  --location $LOCATION
-
-# Anote o nome do seu Web App (WEBAPP_NAME) e a string de conexão do banco de dados.
-# Você precisará deles nos próximos passos.
-```
-
-### Passo 2: Configurar a Conexão Segura (GitHub <> Azure)
-
-1.  **Crie um Service Principal**: Esta é a identidade que o GitHub usará para se autenticar. Substitua `{seu-subscription-id}` e `{seu-grupo-de-recursos}` pelos seus valores.
-    ```bash
-    # Obtenha seu ID de assinatura
-    az account show --query id --output tsv
-
-    # Crie o Service Principal com escopo para o seu grupo de recursos
-    az ad sp create-for-rbac \
-      --name "sp-central-atendimento-github" \
-      --role "contributor" \
-      --scopes "/subscriptions/{seu-subscription-id}/resourceGroups/{seu-grupo-de-recursos}" \
-      --sdk-auth
-    ```
-2.  **Copie o JSON de Saída**: O comando acima irá gerar um bloco de código JSON. Copie-o inteiramente.
-3.  **Crie um Segredo no GitHub**:
-    -   Vá para o seu repositório no GitHub: **Settings > Secrets and variables > Actions**.
-    -   Clique em **New repository secret**.
-    -   **Name**: `AZURE_CREDENTIALS`
-    -   **Secret**: Cole o JSON copiado.
-    -   Clique em **Add secret**.
-
-### Passo 3: Configurar o Pipeline de CI/CD
-
-O pipeline já está definido em `.github/workflows/deploy.yml`. Você só precisa ajustá-lo para apontar para o seu App Service.
-
-1.  Abra o arquivo `.github/workflows/deploy.yml`.
-2.  Encontre a seção `env` e altere o valor de `AZURE_WEBAPP_NAME` para o nome do App Service que você criou no Passo 1.
-    ```yaml
-    env:
-      AZURE_WEBAPP_NAME: app-central-atendimento-19055 # <-- Altere aqui!
-      PYTHON_VERSION: '3.10'
-    ```
-
-### Passo 4: Configurar a Aplicação na Azure
-
-O App Service precisa das mesmas variáveis de ambiente que você usa localmente.
-
-1.  Vá para o seu **App Service** no Portal do Azure.
-2.  No menu lateral, vá para **Configuration > Application settings**.
-3.  Adicione as seguintes configurações:
-    -   `DATABASE_URL`: A string de conexão do seu banco de dados PostgreSQL no Azure.
-    -   `SECRET_KEY`: A mesma chave secreta forte que você usaria em produção.
-4.  Ainda em **Configuration**, vá para a aba **General settings** e defina o **Startup Command**. Você tem duas opções:
-    -   **Opção A (Direto):** Cole o comando no campo "Startup Command":
-        ```
-        gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.main:app
-        ```
-    -   **Opção B (Via Script):** Use o script `startup.sh` incluído no projeto, que é ideal para lógicas de inicialização mais complexas no futuro. No campo "Startup Command", digite:
-        ```
-        ./startup.sh
-        ```
-5.  **Salve as alterações**. O App Service será reiniciado.
-
-### Passo 5: Ativar o Pipeline
-
-Faça o commit e o push das alterações que você fez no arquivo `deploy.yml`.
-
-```bash
-git add .github/workflows/deploy.yml
-git commit -m "ci: Configurar nome do App Service no workflow"
-git push origin master
-```
-Este push irá acionar o pipeline. Vá para a aba **"Actions"** no seu repositório GitHub para acompanhar o deploy. Após a conclusão, sua API estará funcional na URL do Azure.
-
----
-
-## 🤔 Solução de Problemas (Troubleshooting)
-
-<details>
-<summary><strong>Erro local: `column ... does not exist`</strong></summary>
-
--   **Causa:** Seu banco de dados local está dessincronizado com os modelos da aplicação.
--   **Solução:** Pare a aplicação e execute o script de reset: `python reset_db.py`. **Atenção**: Isso apagará todos os dados locais.
-</details>
-
-<details>
-<summary><strong>Erro no Azure CLI: `ResourceGroupNotFound`</strong></summary>
-
--   **Causa:** O grupo de recursos que você especificou em um comando não foi encontrado.
--   **Solução:** Verifique se o nome está correto ou crie o grupo de recursos primeiro com `az group create --name "seu-nome-de-grupo" --location "sua-localizacao"`.
-</details>
-
-<details>
-<summary><strong>Erro no Azure CLI: `The subscription is not registered to use namespace 'Microsoft.Web'`</strong></summary>
-
--   **Causa:** Sua assinatura do Azure precisa habilitar o provedor de recursos para criar Aplicativos Web.
--   **Solução:** Execute o comando `az provider register --namespace Microsoft.Web` e aguarde alguns minutos antes de tentar novamente.
-</details>
-
-<details>
-<summary><strong>Erro no CI/CD: `DATABASE_URL Field required` ou `SECRET_KEY Field required`</strong></summary>
-
--   **Causa:** O passo de `pytest` no pipeline do GitHub Actions precisa das variáveis de ambiente para inicializar a aplicação, mesmo que os testes usem um banco de dados em memória.
--   **Solução:** O arquivo `deploy.yml` já inclui variáveis de ambiente "dummy" para o passo de teste. Se o erro persistir, verifique se essa configuração foi removida acidentalmente.
-</details>
-
----
-
-## 🧪 Testes Automatizados
-
-Para rodar a suíte de testes localmente e garantir a qualidade do código:
-```bash
-pytest
-```
-O pipeline de CI/CD também executa esses testes antes de cada deploy, prevenindo que bugs cheguem à produção.
+| Método | Endpoint | Descrição |
+| :--- | :--- | :--- |
+| `POST` | `/api/auth/login` | Autenticação de administradores |
+| `POST` | `/api/chamados/public` | Abertura de chamado (Público) |
+| `GET` | `/api/chamados/public/{id}` | Consulta de status (Chat Widget) |
+| `POST` | `/api/boletos/gerar` | Geração de 2ª via de boleto |
+| `GET` | `/api/metricas` | Dados para o Dashboard (Admin) |
 
 ---
 
 ## 📁 Estrutura do Projeto
 
-A estrutura do código é organizada por responsabilidades para facilitar a manutenção.
 ```
 central-atendimento-azure/
-├── .github/
-│   └── workflows/
-│       └── deploy.yml         # Workflow de CI/CD para Azure
-├── src/
-│   ├── main.py                # Ponto de entrada da aplicação FastAPI
-│   ├── config/                # Módulos de configuração (BD, .env)
-│   ├── models/                # Modelos ORM do SQLAlchemy (tabelas)
-│   ├── schemas/               # Schemas Pydantic (validação de dados da API)
-│   ├── routes/                # Endpoints da API (rotas)
-│   └── services/              # Lógica de negócio (ex: classificação com IA)
-├── tests/                     # Testes automatizados
-├── .env.example               # Arquivo de exemplo para variáveis de ambiente
-├── requirements.txt           # Dependências travadas (gerado por pip-tools)
-├── startup.sh                 # Script de inicialização para o App Service
-└── reset_db.py                # Script para resetar o banco de dados de dev
+├── .github/workflows/    # Pipelines de CI/CD
+├── frontend/             # Aplicação React (Vite)
+│   ├── src/
+│   │   ├── components/   # Componentes Reutilizáveis (ChatWidget, Layout)
+│   │   ├── pages/        # Páginas (Dashboard, Support, Login)
+│   │   └── context/      # Gestão de Estado (Auth)
+├── src/                  # Backend FastAPI
+│   ├── routes/           # Controladores de API
+│   ├── models/           # Modelos de Banco de Dados
+│   ├── schemas/          # Schemas Pydantic (DTOs)
+│   └── main.py           # Entrypoint da Aplicação
+├── tests/                # Testes Automatizados (Pytest)
+└── requirements.txt      # Dependências Python
 ```
 
 ---
 
-## 📈 Roadmap
+## 📝 Licença
 
--   [x] **v1.1**: Autenticação JWT implementada.
--   [x] **v1.2**: Pipeline de CI/CD com GitHub Actions.
--   [ ] **v1.3**: Integração real com **Azure Cognitive Services**, WhatsApp Business API, SendGrid.
--   [ ] **v2.0**: Arquitetura multi-tenant, ML para priorização, integração com CRMs.
+Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
 
 ---
-
-## 📝 Licença e Contato
-
-Este projeto está sob a licença MIT.
-
-Desenvolvido por **Julio Okuda**.
--   **LinkedIn:** [linkedin.com/in/juliookuda](https://www.linkedin.com/in/juliookuda/)
--   **GitHub:** [@Jcnok](https://github.com/Jcnok)
-
-```
+**Desenvolvido com 💙 por Julio Okuda**
