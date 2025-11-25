@@ -85,25 +85,64 @@ graph TD
     Workers -->|Async SQL| DB
 ```
 
+### 🤖 Arquitetura de Agentes LLM (Em Desenvolvimento)
+
+O sistema está evoluindo para uma **arquitetura de agentes inteligentes** baseada em Azure OpenAI, que substituirá o classificador baseado em regras por agentes especializados com capacidades de raciocínio e aprendizado.
+
+**Padrão Arquitetural**: Hierárquico com Micro-Agentes
+
+```mermaid
+graph TD
+    User[👤 Cliente] -->|Mensagem| Router[🎯 Router Agent<br/>GPT-4o-mini]
+    
+    Router -->|Financeiro| FinAgent[💰 Financial Agent<br/>GPT-4o]
+    Router -->|Técnico| TechAgent[🔧 Technical Agent<br/>GPT-4o + RAG]
+    Router -->|Comercial| SalesAgent[📈 Sales Agent<br/>GPT-4o]
+    Router -->|Geral| GenAgent[💬 General Agent<br/>GPT-4o-mini]
+    
+    FinAgent -->|Tools| BoletoAPI[📄 Boleto API]
+    TechAgent -->|Tools| TicketAPI[🎫 Ticket API]
+    TechAgent -->|RAG| VectorDB[(🧠 pgvector)]
+    SalesAgent -->|Tools| CRM[👥 CRM API]
+    
+    FinAgent --> Cache[(⚡ Redis Cache)]
+    TechAgent --> Cache
+    SalesAgent --> Cache
+```
+
+**Benefícios**:
+- ✅ Resolução automática de 70%+ das solicitações
+- ✅ Respostas contextualizadas e personalizadas
+- ✅ Aprendizado contínuo via RAG (Retrieval-Augmented Generation)
+- ✅ Custo operacional: ~$46/mês (vs $9.000/mês com atendentes)
+
+> 📘 **Documentação Completa**: Veja [LLM Agent Architecture](docs/llm_agent_architecture.md) para detalhes de implementação, custos e roadmap.
+
 ---
 
 ## 🛠 Stack Tecnológica
 
 ### Backend (O Motor)
 *   **Python 3.10+**: A linguagem da IA e da produtividade.
-*   **FastAPI**: Framework moderno, rápido e assíncrono.
+*   **FastAPI 0.121.2**: Framework moderno, rápido e assíncrono.
 *   **SQLAlchemy (AsyncIO)**: ORM poderoso para interações não-bloqueantes com o banco.
 *   **Pydantic**: Validação de dados robusta e tipada.
 
+### LLM & AI (Próxima Geração)
+*   **Azure OpenAI (GPT-4o/GPT-4o-mini)**: Modelos de linguagem para agentes inteligentes.
+*   **Semantic Kernel**: Framework de orquestração de agentes da Microsoft.
+*   **pgvector**: Extensão PostgreSQL para busca vetorial (RAG).
+*   **Azure Redis**: Cache de sessões e respostas frequentes.
+
 ### Frontend (A Face)
-*   **React 18**: Biblioteca líder para interfaces interativas.
+*   **React 19.2.0**: Biblioteca líder para interfaces interativas.
 *   **Vite**: Build tool ultrarrápida.
 *   **CSS Modules**: Estilização modular e segura.
 
 ### Infraestrutura & DevOps (A Fundação)
 *   **Docker**: Containerização para consistência entre ambientes.
 *   **Azure App Service**: PaaS escalável para hospedagem.
-*   **PostgreSQL**: Banco de dados relacional robusto.
+*   **PostgreSQL 14+**: Banco de dados relacional robusto.
 *   **GitHub Actions**: CI/CD automatizado.
 
 ---

@@ -43,6 +43,43 @@ class Settings(BaseSettings):
         None, description="Endpoint do Azure Cognitive Services."
     )
 
+    # ==================== AZURE OPENAI (LLM Agents) ====================
+    AZURE_OPENAI_ENDPOINT: Optional[str] = Field(
+        None, description="Azure OpenAI endpoint URL"
+    )
+    AZURE_OPENAI_KEY: Optional[str] = Field(
+        None, description="Azure OpenAI API key"
+    )
+    AZURE_OPENAI_DEPLOYMENT_GPT4O: str = Field(
+        "gpt-4o", description="GPT-4o deployment name"
+    )
+    AZURE_OPENAI_DEPLOYMENT_GPT4O_MINI: str = Field(
+        "gpt-4o-mini", description="GPT-4o-mini deployment name"
+    )
+    AZURE_OPENAI_DEPLOYMENT_EMBEDDING: str = Field(
+        "text-embedding-3-small", description="Embedding model deployment name"
+    )
+    AZURE_OPENAI_API_VERSION: str = Field(
+        "2024-08-01-preview", description="Azure OpenAI API version"
+    )
+
+    # ==================== REDIS (Agent Cache) ====================
+    REDIS_HOST: Optional[str] = Field(
+        None, description="Redis host"
+    )
+    REDIS_PORT: int = Field(
+        6379, description="Redis port"
+    )
+    REDIS_PASSWORD: Optional[str] = Field(
+        None, description="Redis password"
+    )
+    REDIS_SSL: bool = Field(
+        False, description="Use SSL for Redis connection"
+    )
+    REDIS_DB: int = Field(
+        0, description="Redis database number"
+    )
+
     # ==================== LOGGING ====================
     LOG_LEVEL: str = Field("INFO", description="Nível de log.")
 

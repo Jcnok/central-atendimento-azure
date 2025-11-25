@@ -1,25 +1,30 @@
-# Framework e Servidores
+# Core Backend
 fastapi
-gunicorn
 uvicorn
-python-multipart
-
-# Banco de Dados
+gunicorn
 sqlalchemy
-psycopg2-binary
-
-# Validação e Configuração
 pydantic
 pydantic-settings
-email-validator
 python-dotenv
-
-# Autenticação e Segurança
 python-jose[cryptography]
-passlib==1.7.4
-bcrypt==3.2.0
+passlib
+bcrypt
+python-multipart
+email-validator
+httpx
 
-# Testes
+# Database
+psycopg2-binary
+asyncpg
+aiosqlite
+
+# LLM & AI Agents
+semantic-kernel>=1.0.0
+openai>=1.0.0
+tiktoken
+redis>=5.0.0
+pgvector
+
+# Testing
 pytest
 pytest-asyncio
-httpx
