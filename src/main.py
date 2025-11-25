@@ -107,10 +107,11 @@ async def health():
 
 
 # ==================== REGISTRO DE ROTAS ====================
-app.include_router(auth_router)
-app.include_router(clientes_router)
-app.include_router(chamados_router)
-app.include_router(metricas_router)
+# ==================== REGISTRO DE ROTAS ====================
+app.include_router(auth_router, prefix="/api")
+app.include_router(clientes_router, prefix="/api")
+app.include_router(chamados_router, prefix="/api")
+app.include_router(metricas_router, prefix="/api")
 
 
 # ==================== STATIC FILES (FRONTEND) ====================

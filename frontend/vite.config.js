@@ -9,7 +9,6 @@ export default defineConfig({
       '/api': {
         target: 'https://app-central-atendimento-19055.azurewebsites.net',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },
