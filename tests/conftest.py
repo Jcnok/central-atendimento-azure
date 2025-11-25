@@ -60,7 +60,7 @@ def auth_token(db_session):
     unique_email = f"test_{uuid.uuid4().hex}@example.com"
 
     signup_response = client.post(
-        "/auth/signup",
+        "/api/auth/signup",
         json={
             "username": unique_username,
             "email": unique_email,
@@ -70,7 +70,7 @@ def auth_token(db_session):
     assert signup_response.status_code == 200, f"Signup failed: {signup_response.text}"
 
     login_response = client.post(
-        "/auth/login",
+        "/api/auth/login",
         data={"username": unique_username, "password": "password"},
     )
     assert login_response.status_code == 200, f"Login failed: {login_response.text}"

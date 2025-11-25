@@ -8,7 +8,7 @@ client = TestClient(app)
 class TestAuthEndpoints:
     def test_signup(self, db_session):
         response = client.post(
-            "/auth/signup",
+            "/api/auth/signup",
             json={"username": "testuser", "email": "test@example.com", "password": "password"},
         )
         assert response.status_code == 200
@@ -16,11 +16,11 @@ class TestAuthEndpoints:
 
     def test_login(self, db_session):
         client.post(
-            "/auth/signup",
+            "/api/auth/signup",
             json={"username": "testuser2", "email": "test2@example.com", "password": "password"},
         )
         response = client.post(
-            "/auth/login",
+            "/api/auth/login",
             data={"username": "testuser2", "password": "password"},
         )
         assert response.status_code == 200
@@ -29,12 +29,12 @@ class TestAuthEndpoints:
     def test_access_protected_endpoint(self, db_session):
         # Use the db_session fixture to ensure the database is initialized
         response = client.post(
-            "/auth/signup",
+            "/api/auth/signup",
             json={"username": "testuser3", "email": "test3@example.com", "password": "password"},
         )
         assert response.status_code == 200
         access_token = response.json()["access_token"]
         response = client.get(
-            "/clientes/", headers={"Authorization": f"Bearer {access_token}"}
+            "/api/clientes/", headers={"Authorization": f"Bearer {access_token}"}
         )
         assert response.status_code == 200
