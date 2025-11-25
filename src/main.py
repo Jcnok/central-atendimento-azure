@@ -16,6 +16,7 @@ from src.routes.auth import router as auth_router
 from src.routes.chamados import router as chamados_router
 from src.routes.clientes import router as clientes_router
 from src.routes.metricas import router as metricas_router
+from src.routes.boletos import router as boletos_router
 
 # ==================== CONFIGURAÇÃO DE LOGGING ====================
 logging.basicConfig(level=logging.INFO)
@@ -112,6 +113,7 @@ app.include_router(auth_router, prefix="/api")
 app.include_router(clientes_router, prefix="/api")
 app.include_router(chamados_router, prefix="/api")
 app.include_router(metricas_router, prefix="/api")
+app.include_router(boletos_router, prefix="/api")
 
 
 # ==================== STATIC FILES (FRONTEND) ====================

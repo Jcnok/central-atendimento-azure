@@ -8,8 +8,10 @@ export default function Support() {
     const [client, setClient] = useState(null);
     const [message, setMessage] = useState('');
     const [ticket, setTicket] = useState(null);
+    const [boleto, setBoleto] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [mode, setMode] = useState('support'); // 'support' or 'boleto'
 
     const handleCheckEmail = async (e) => {
         e.preventDefault();
@@ -64,6 +66,34 @@ export default function Support() {
         }
     };
 
+    const handleGerarBoleto = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch('/api/boletos/gerar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('Nenhum boleto pendente encontrado para este e-mail.');
+                }
+                throw new Error('Erro ao gerar boleto.');
+            }
+
+            const data = await response.json();
+            setBoleto(data);
+            setStep('boleto-result');
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div style={{
             minHeight: '100vh',
@@ -79,11 +109,77 @@ export default function Support() {
                     <p style={{ color: 'var(--text-secondary)' }}>Atendimento Inteligente 24h</p>
                 </div>
 
-                {/* STEP 1: Identification */}
-                {step === 1 && (
-                    <form onSubmit={handleCheckEmail}>
+                {/* Mode Selection */}
+                {step === 1 && !mode.startsWith('selected') && (
+                    <div style={{ display: 'grid', gap: '1rem' }}>
+                        <button
+                            onClick={() => { setMode('support'); setStep('email-input'); }}
+                            className="glass-panel"
+                            style={{
+                                padding: '1.5rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '1rem',
+                                cursor: 'pointer',
+                                border: '1px solid var(--glass-border)',
+                                background: 'rgba(255,255,255,0.05)',
+                                transition: 'transform 0.2s',
+                                textAlign: 'left'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                        >
+                            <div style={{ fontSize: '2rem' }}>💬</div>
+                            <div>
+                                <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Falar com Suporte</div>
+                                <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Tire dúvidas ou relate problemas</div>
+                            </div>
+                        </button>
+
+                        <button
+                            onClick={() => { setMode('boleto'); setStep('email-input'); }}
+                            className="glass-panel"
+                            style={{
+                                padding: '1.5rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '1rem',
+                                cursor: 'pointer',
+                                border: '1px solid var(--glass-border)',
+                                background: 'rgba(255,255,255,0.05)',
+                                transition: 'transform 0.2s',
+                                textAlign: 'left'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                        >
+                            <div style={{ fontSize: '2rem' }}>📄</div>
+                            <div>
+                                <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>2ª Via de Boleto</div>
+                                <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Gere seu boleto atualizado</div>
+                            </div>
+                        </button>
+                    </div>
+                )}
+
+                {/* STEP: Email Input (Shared) */}
+                {step === 'email-input' && (
+                    <form onSubmit={mode === 'support' ? handleCheckEmail : handleGerarBoleto}>
+                        <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <button 
+                                type="button" 
+                                onClick={() => setStep(1)}
+                                style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.2rem' }}
+                            >
+                                ←
+                            </button>
+                            <h2 style={{ fontSize: '1.2rem', margin: 0 }}>
+                                {mode === 'support' ? 'Identificação' : 'Gerar Boleto'}
+                            </h2>
+                        </div>
+
                         <p style={{ marginBottom: '1.5rem', lineHeight: '1.6' }}>
-                            Para iniciar o atendimento, por favor informe seu email de cadastro.
+                            Por favor, informe seu e-mail para continuar.
                         </p>
 
                         {error && (
@@ -118,7 +214,7 @@ export default function Support() {
                             style={{ width: '100%', padding: '12px' }}
                             disabled={loading}
                         >
-                            {loading ? 'Verificando...' : 'Iniciar Atendimento'}
+                            {loading ? 'Processando...' : 'Continuar'}
                         </button>
                     </form>
                 )}
@@ -159,6 +255,71 @@ export default function Support() {
                             }}
                         >
                             Tentar outro e-mail
+                        </button>
+                    </div>
+                )}
+
+                {/* STEP: Boleto Result */}
+                {step === 'boleto-result' && boleto && (
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
+                        <h2 style={{ marginBottom: '1rem' }}>Boleto Gerado!</h2>
+                        
+                        <div style={{
+                            background: 'white',
+                            color: 'black',
+                            padding: '1.5rem',
+                            borderRadius: '8px',
+                            marginBottom: '1.5rem',
+                            textAlign: 'left'
+                        }}>
+                            <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>Código de Barras:</div>
+                            <div style={{ fontFamily: 'monospace', fontSize: '1.1rem', wordBreak: 'break-all', fontWeight: 'bold' }}>
+                                {boleto.codigo_barras}
+                            </div>
+                            <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between' }}>
+                                <div>
+                                    <div style={{ fontSize: '0.8rem', color: '#666' }}>Valor</div>
+                                    <div style={{ fontWeight: 'bold' }}>R$ {boleto.valor.toFixed(2)}</div>
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '0.8rem', color: '#666' }}>Vencimento</div>
+                                    <div style={{ fontWeight: 'bold' }}>{boleto.vencimento}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <a 
+                            href={boleto.link_pdf}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-primary"
+                            style={{ 
+                                display: 'block', 
+                                width: '100%', 
+                                padding: '12px', 
+                                textAlign: 'center', 
+                                textDecoration: 'none',
+                                marginBottom: '1rem'
+                            }}
+                        >
+                            Baixar PDF
+                        </a>
+
+                        <button
+                            onClick={() => {
+                                setStep(1);
+                                setBoleto(null);
+                                setEmail('');
+                            }}
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: 'var(--text-secondary)',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Voltar ao início
                         </button>
                     </div>
                 )}
@@ -291,6 +452,8 @@ export default function Support() {
                     </div>
                 )}
             </div>
-        </div>
+            </div>
+            <ChatWidget />
+        </div >
     );
 }
