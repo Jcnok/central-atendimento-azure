@@ -19,99 +19,103 @@ def mock_settings():
 
 
 @pytest.fixture
-def router_agent(mock_settings):
+def mock_kernel():
+    """Mock Semantic Kernel"""
+    with patch('src.agents.router_agent.Kernel') as MockKernel:
+        kernel_instance = MockKernel.return_value
+        yield kernel_instance
+
+
+@pytest.fixture
+def router_agent(mock_settings, mock_kernel):
     """Create Router Agent instance for testing"""
     with patch('src.agents.router_agent.AzureChatCompletion'):
         return RouterAgent()
 
 
 @pytest.mark.asyncio
-async def test_route_financial_intent(router_agent):
+async def test_route_financial_intent(router_agent, mock_kernel):
     """Test routing of financial-related message"""
     # Mock LLM response
     mock_response = MagicMock()
     mock_response.__str__ = lambda self: '{"agent": "financial_agent", "confidence": 0.95, "reasoning": "Solicitação de boleto"}'
     
-    with patch.object(router_agent.kernel, 'get_service') as mock_service:
-        mock_chat = AsyncMock()
-        mock_chat.get_chat_message_content = AsyncMock(return_value=mock_response)
-        mock_service.return_value = mock_chat
+    # Setup mock service
+    mock_chat_service = AsyncMock()
+    mock_chat_service.get_chat_message_content = AsyncMock(return_value=mock_response)
+    mock_kernel.get_service.return_value = mock_chat_service
         
-        result = await router_agent.route("Preciso da segunda via do meu boleto")
-        
-        assert result["agent"] == "financial_agent"
-        assert result["confidence"] > 0.9
-        assert "boleto" in result["reasoning"].lower()
+    result = await router_agent.route("Preciso da segunda via do meu boleto")
+    
+    assert result["agent"] == "financial_agent"
+    assert result["confidence"] > 0.9
+    assert "boleto" in result["reasoning"].lower()
 
 
 @pytest.mark.asyncio
-async def test_route_technical_intent(router_agent):
+async def test_route_technical_intent(router_agent, mock_kernel):
     """Test routing of technical support message"""
     mock_response = MagicMock()
     mock_response.__str__ = lambda self: '{"agent": "technical_agent", "confidence": 0.92, "reasoning": "Problema técnico"}'
     
-    with patch.object(router_agent.kernel, 'get_service') as mock_service:
-        mock_chat = AsyncMock()
-        mock_chat.get_chat_message_content = AsyncMock(return_value=mock_response)
-        mock_service.return_value = mock_chat
+    mock_chat_service = AsyncMock()
+    mock_chat_service.get_chat_message_content = AsyncMock(return_value=mock_response)
+    mock_kernel.get_service.return_value = mock_chat_service
         
-        result = await router_agent.route("Meu sistema está com erro")
-        
-        assert result["agent"] == "technical_agent"
-        assert result["confidence"] > 0.9
+    result = await router_agent.route("Meu sistema está com erro")
+    
+    assert result["agent"] == "technical_agent"
+    assert result["confidence"] > 0.9
 
 
 @pytest.mark.asyncio
-async def test_route_with_context(router_agent):
+async def test_route_with_context(router_agent, mock_kernel):
     """Test routing with additional context"""
     mock_response = MagicMock()
     mock_response.__str__ = lambda self: '{"agent": "sales_agent", "confidence": 0.88, "reasoning": "Interesse em upgrade"}'
     
-    with patch.object(router_agent.kernel, 'get_service') as mock_service:
-        mock_chat = AsyncMock()
-        mock_chat.get_chat_message_content = AsyncMock(return_value=mock_response)
-        mock_service.return_value = mock_chat
+    mock_chat_service = AsyncMock()
+    mock_chat_service.get_chat_message_content = AsyncMock(return_value=mock_response)
+    mock_kernel.get_service.return_value = mock_chat_service
         
-        context = {"cliente_id": 123, "current_plan": "basic"}
-        result = await router_agent.route("Quero fazer upgrade", context=context)
-        
-        assert result["agent"] == "sales_agent"
-        assert "confidence" in result
+    context = {"cliente_id": 123, "current_plan": "basic"}
+    result = await router_agent.route("Quero fazer upgrade", context=context)
+    
+    assert result["agent"] == "sales_agent"
+    assert "confidence" in result
 
 
 @pytest.mark.asyncio
-async def test_route_invalid_agent_fallback(router_agent):
+async def test_route_invalid_agent_fallback(router_agent, mock_kernel):
     """Test fallback to general_agent when invalid agent is returned"""
     mock_response = MagicMock()
     mock_response.__str__ = lambda self: '{"agent": "invalid_agent", "confidence": 0.5, "reasoning": "Test"}'
     
-    with patch.object(router_agent.kernel, 'get_service') as mock_service:
-        mock_chat = AsyncMock()
-        mock_chat.get_chat_message_content = AsyncMock(return_value=mock_response)
-        mock_service.return_value = mock_chat
+    mock_chat_service = AsyncMock()
+    mock_chat_service.get_chat_message_content = AsyncMock(return_value=mock_response)
+    mock_kernel.get_service.return_value = mock_chat_service
         
-        result = await router_agent.route("Test message")
-        
-        assert result["agent"] == "general_agent"
-        assert result["confidence"] == 0.5
+    result = await router_agent.route("Test message")
+    
+    assert result["agent"] == "general_agent"
+    assert result["confidence"] == 0.5
 
 
 @pytest.mark.asyncio
-async def test_route_json_parse_error(router_agent):
+async def test_route_json_parse_error(router_agent, mock_kernel):
     """Test handling of invalid JSON response"""
     mock_response = MagicMock()
     mock_response.__str__ = lambda self: 'Invalid JSON'
     
-    with patch.object(router_agent.kernel, 'get_service') as mock_service:
-        mock_chat = AsyncMock()
-        mock_chat.get_chat_message_content = AsyncMock(return_value=mock_response)
-        mock_service.return_value = mock_chat
+    mock_chat_service = AsyncMock()
+    mock_chat_service.get_chat_message_content = AsyncMock(return_value=mock_response)
+    mock_kernel.get_service.return_value = mock_chat_service
         
-        result = await router_agent.route("Test message")
-        
-        assert result["agent"] == "general_agent"
-        assert result["confidence"] == 0.0
-        assert "Erro" in result["reasoning"]
+    result = await router_agent.route("Test message")
+    
+    assert result["agent"] == "general_agent"
+    assert result["confidence"] == 0.0
+    assert "Erro" in result["reasoning"]
 
 
 def test_list_agents(router_agent):
