@@ -25,6 +25,7 @@ tiktoken
 redis>=5.0.0
 pgvector
 numpy<2.0.0
+pydantic<2.10
 
 # Testing
 pytest

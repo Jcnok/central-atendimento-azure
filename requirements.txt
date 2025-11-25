@@ -197,14 +197,14 @@ pybars4==0.9.13
     # via semantic-kernel
 pycparser==2.23
     # via cffi
-pydantic==2.12.4
+pydantic==2.9.2
     # via
     #   -r requirements.in
     #   fastapi
     #   openai
     #   pydantic-settings
     #   semantic-kernel
-pydantic-core==2.41.5
+pydantic-core==2.23.4
     # via pydantic
 pydantic-settings==2.12.0
     # via
@@ -302,9 +302,7 @@ typing-extensions==4.15.0
     #   starlette
     #   typing-inspection
 typing-inspection==0.4.2
-    # via
-    #   pydantic
-    #   pydantic-settings
+    # via pydantic-settings
 urllib3==2.5.0
     # via requests
 uvicorn==0.38.0
