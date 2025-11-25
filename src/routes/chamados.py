@@ -67,7 +67,7 @@ def criar_chamado(
         encaminhado_para_humano=not classificacao["resolvido"],
         data_criacao=novo_chamado.data_criacao,
     )
-    )
+
 
 
 @router.post(
