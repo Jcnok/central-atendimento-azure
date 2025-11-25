@@ -41,7 +41,7 @@ jobs:
 
     - name: Create .env file for testing
       run: |
-        echo "DATABASE_URL=postgresql://test:test@localhost/testdb" > .env
+        echo "DATABASE_URL=sqlite+aiosqlite:///./test.db" > .env
         echo "SECRET_KEY=test_secret_key_for_ci" >> .env
         echo "APP_ENV=testing" >> .env
 

@@ -37,6 +37,12 @@ engine_async = create_async_engine(
     connect_args={"check_same_thread": False},
     poolclass=NullPool,
 )
+
+# PATCH: Substituir a engine da aplicação pela engine de teste
+# Isso garante que o init_db (chamado no lifespan) use o banco de teste
+from src.config import database
+database.engine = engine_async
+
 TestingSessionAsync = async_sessionmaker(
     bind=engine_async,
     class_=AsyncSession,
