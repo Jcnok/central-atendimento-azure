@@ -47,14 +47,19 @@ async def criar_chamado(
     classificacao = IAClassifier.classificar(chamado.mensagem, chamado.canal)
 
     # Cria o chamado no banco
+    from src.utils.protocolo import gerar_protocolo
+    
     novo_chamado = Chamado(
         cliente_id=chamado.cliente_id,
         user_id=current_user.id,
+        protocolo=gerar_protocolo(),
         canal=chamado.canal,
         mensagem=chamado.mensagem,
         status="resolvido" if classificacao["resolvido"] else "aberto",
         resposta_automatica=classificacao["resposta"],
         encaminhado_para_humano=not classificacao["resolvido"],
+        prioridade=classificacao["prioridade"],
+        categoria=classificacao["intencao"],
     )
 
     db.add(novo_chamado)
@@ -100,14 +105,19 @@ async def criar_chamado_publico(
     classificacao = IAClassifier.classificar(chamado.mensagem, chamado.canal)
 
     # Cria o chamado no banco (sem user_id)
+    from src.utils.protocolo import gerar_protocolo
+
     novo_chamado = Chamado(
         cliente_id=chamado.cliente_id,
         user_id=None,
+        protocolo=gerar_protocolo(),
         canal=chamado.canal,
         mensagem=chamado.mensagem,
         status="resolvido" if classificacao["resolvido"] else "encaminhado",
         resposta_automatica=classificacao["resposta"],
         encaminhado_para_humano=not classificacao["resolvido"],
+        prioridade=classificacao["prioridade"],
+        categoria=classificacao["intencao"],
     )
 
     db.add(novo_chamado)

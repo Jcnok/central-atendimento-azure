@@ -33,9 +33,12 @@ async def buscar_cliente_por_email(email: str, db: AsyncSession = Depends(get_db
 async def criar_cliente(cliente: ClienteCreate, db: AsyncSession = Depends(get_db)):
     """Cria um novo cliente"""
     try:
+        from src.utils.security import get_password_hash
+        
         novo_cliente = Cliente(
             nome=cliente.nome,
             email=cliente.email,
+            hashed_password=get_password_hash(cliente.password),
             telefone=cliente.telefone,
             canal_preferido=cliente.canal_preferido,
         )

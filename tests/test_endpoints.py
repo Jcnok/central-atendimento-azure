@@ -38,6 +38,7 @@ class TestClientes:
             json={
                 "nome": "João Silva",
                 "email": email_unico,
+                "password": "secret_password",
                 "telefone": "11999999999",
                 "canal_preferido": "whatsapp",
             },
@@ -54,6 +55,7 @@ class TestClientes:
             json={
                 "nome": "Maria Silva",
                 "email": email_unico,
+                "password": "secret_password",
                 "telefone": "11988888888",
             },
             headers=headers,
@@ -77,6 +79,7 @@ class TestClientes:
             json={
                 "nome": "Cliente Duplicado",
                 "email": email_unico,
+                "password": "secret_password",
                 "telefone": "11977777777",
             },
             headers=headers,
@@ -86,6 +89,7 @@ class TestClientes:
             json={
                 "nome": "Cliente Duplicado 2",
                 "email": email_unico,
+                "password": "secret_password",
                 "telefone": "11977777778",
             },
             headers=headers,
@@ -102,6 +106,7 @@ class TestClientes:
             json={
                 "nome": "Cliente Publico",
                 "email": email_unico,
+                "password": "secret_password",
                 "telefone": "11966666666",
             },
             headers=headers,
@@ -120,6 +125,7 @@ class TestChamados:
             json={
                 "nome": "Cliente Chamados",
                 "email": email_unico,
+                "password": "secret_password",
                 "telefone": "11999999999",
             },
             headers=headers,

@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr
 class ClienteCreate(BaseModel):
     nome: str
     email: EmailStr
+    password: str
     telefone: Optional[str] = None
     canal_preferido: str = "site"
 
