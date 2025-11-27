@@ -80,5 +80,53 @@ async def listar_clientes(skip: int = 0, limit: int = 10, db: AsyncSession = Dep
     result = await db.execute(select(Cliente).offset(skip).limit(limit))
     return result.scalars().all()
 
+@router.get(
+    "/me/contratos",
+    dependencies=[Depends(get_current_user)],
+)
+async def listar_meus_contratos(
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Lista os contratos do cliente autenticado"""
+    
+    if current_user.get("role") != "client":
+         # If admin, return empty list or error. 
+         return []
+
+    result = await db.execute(select(Cliente).filter(Cliente.email == current_user["sub"]))
+    cliente = result.scalars().first()
+    
+    if not cliente:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado para este usuário"
+        )
+        
+    # Fetch contracts with Plan details
+    from src.models.contrato import Contrato
+    from src.models.plano import Plano
+    from sqlalchemy.orm import selectinload
+
+    query = (
+        select(Contrato)
+        .options(selectinload(Contrato.plano))
+        .filter(Contrato.cliente_id == cliente.id)
+    )
+    
+    result = await db.execute(query)
+    contratos = result.scalars().all()
+    
+    # Return simplified structure
+    return [
+        {
+            "id": c.contrato_id,
+            "plan": c.plano.nome,
+            "status": c.status.value if hasattr(c.status, 'value') else c.status,
+            "velocidade": c.plano.velocidade,
+            "preco": c.plano.preco
+        }
+        for c in contratos
+    ]
+
 
 

@@ -4,19 +4,35 @@ import styles from './Support.module.css';
 
 export default function Support() {
     const { user, token, logout } = useAuth();
+    // Get user name from localStorage (saved during login) or fallback to email
+    const userName = localStorage.getItem('user_name') || user?.sub?.split('@')[0] || 'Cliente';
+
     const [messages, setMessages] = useState([
-        { type: 'bot', text: `Olá, ${user?.sub?.split('@')[0] || 'Cliente'}! Sou sua assistente virtual. Como posso ajudar com seus planos hoje?` }
+        { type: 'bot', text: `Olá, ${userName}! Sou sua assistente virtual. Como posso ajudar com seus planos hoje?` }
     ]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [sessionId] = useState(() => 'session-' + Math.random().toString(36).substr(2, 9));
+    const [contracts, setContracts] = useState([]);
     const messagesEndRef = useRef(null);
 
-    // Mock Data for Sidebar (In a real app, fetch from API)
-    const contracts = [
-        { id: 1, plan: 'Internet Fibra 500MB', status: 'Ativo' },
-        { id: 2, plan: 'Móvel 5G', status: 'Ativo' }
-    ];
+    useEffect(() => {
+        fetchContracts();
+    }, []);
+
+    const fetchContracts = async () => {
+        try {
+            const response = await fetch('/api/clientes/me/contratos', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setContracts(data);
+            }
+        } catch (error) {
+            console.error("Erro ao buscar contratos:", error);
+        }
+    };
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -88,9 +104,9 @@ export default function Support() {
                 <div className={styles.logo}>Central<span className={styles.highlight}>Inteligente</span></div>
 
                 <div className={styles.userInfo}>
-                    <div className={styles.avatar}>{user?.sub?.charAt(0).toUpperCase()}</div>
+                    <div className={styles.avatar}>{userName.charAt(0).toUpperCase()}</div>
                     <div className={styles.userDetails}>
-                        <span className={styles.userName}>{user?.sub}</span>
+                        <span className={styles.userName}>{userName}</span>
                         <span className={styles.userRole}>Cliente</span>
                     </div>
                 </div>
@@ -98,12 +114,17 @@ export default function Support() {
                 <nav className={styles.nav}>
                     <h3>Meus Serviços</h3>
                     <ul>
-                        {contracts.map(c => (
+                        {contracts.length > 0 ? contracts.map(c => (
                             <li key={c.id} className={styles.navItem}>
-                                <span className={styles.statusDot}></span>
-                                {c.plan}
+                                <span className={`${styles.statusDot} ${styles[c.status]}`}></span>
+                                <div>
+                                    <div className={styles.planName}>{c.plan}</div>
+                                    <div className={styles.planDetail}>{c.velocidade} - R$ {c.preco}</div>
+                                </div>
                             </li>
-                        ))}
+                        )) : (
+                            <li className={styles.navItem}>Nenhum serviço ativo</li>
+                        )}
                     </ul>
 
                     <h3>Atalhos</h3>

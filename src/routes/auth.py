@@ -46,7 +46,11 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token = create_access_token(data={"sub": user.username, "role": "admin"})
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user_name": user.full_name or user.username
+    }
 
 @router.post("/login/client")
 async def login_client(
@@ -69,4 +73,8 @@ async def login_client(
         )
     
     access_token = create_access_token(data={"sub": cliente.email, "role": "client"})
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user_name": cliente.nome
+    }

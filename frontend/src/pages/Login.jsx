@@ -41,6 +41,11 @@ export default function Login() {
             const data = await response.json();
             login(data.access_token);
 
+            // Save user name for display
+            if (data.user_name) {
+                localStorage.setItem('user_name', data.user_name);
+            }
+
             // Redirect based on role
             if (activeTab === 'client') {
                 navigate('/support');

@@ -1,16 +1,16 @@
 .container {
     font-family: 'Inter', sans-serif;
-    color: #333;
-    background-color: #f5f5f7;
+    background-color: #f8f9fa;
+    min-height: 100vh;
 }
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 5%;
+    padding: 1.5rem 4rem;
     background: white;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -19,15 +19,19 @@
 .logo {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #1a1a1a;
+    color: #333;
 }
 
 .logoHighlight {
     color: #6200ea;
 }
 
+.nav {
+    display: flex;
+    gap: 2rem;
+}
+
 .nav a {
-    margin: 0 1rem;
     text-decoration: none;
     color: #555;
     font-weight: 500;
@@ -41,7 +45,7 @@
 .loginButton {
     background: #6200ea;
     color: white;
-    padding: 0.5rem 1.5rem;
+    padding: 0.6rem 1.2rem;
     border-radius: 2rem;
     text-decoration: none;
     font-weight: 600;
@@ -49,29 +53,31 @@
 }
 
 .loginButton:hover {
-    background: #3700b3;
+    background: #5000d0;
 }
 
 .hero {
-    background: linear-gradient(135deg, #6200ea 0%, #3700b3 100%);
+    background: linear-gradient(135deg, #6200ea 0%, #9c27b0 100%);
     color: white;
-    padding: 5rem 5%;
+    padding: 6rem 4rem;
     text-align: center;
-    min-height: 60vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
-.heroContent h1 {
+.heroContent {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero h1 {
     font-size: 3.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.1;
 }
 
-.heroContent p {
+.hero p {
     font-size: 1.2rem;
-    margin-bottom: 2rem;
     opacity: 0.9;
+    margin-bottom: 2.5rem;
 }
 
 .ctaButton {
@@ -91,29 +97,29 @@
 }
 
 .plansSection {
-    padding: 4rem 5%;
+    padding: 4rem;
     text-align: center;
 }
 
 .plansSection h2 {
     font-size: 2rem;
+    color: #333;
     margin-bottom: 3rem;
-    color: #1a1a1a;
 }
 
 .plansGrid {
-    display: flex;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2rem;
-    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .planCard {
     background: white;
     padding: 2rem;
     border-radius: 1rem;
-    width: 300px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     position: relative;
     transition: transform 0.2s;
 }
@@ -122,12 +128,12 @@
     transform: translateY(-5px);
 }
 
-.featured {
+.planCard.featured {
     border: 2px solid #6200ea;
     transform: scale(1.05);
 }
 
-.featured:hover {
+.planCard.featured:hover {
     transform: scale(1.05) translateY(-5px);
 }
 
@@ -138,30 +144,34 @@
     transform: translateX(-50%);
     background: #6200ea;
     color: white;
-    padding: 0.25rem 1rem;
+    padding: 0.4rem 1rem;
     border-radius: 1rem;
     font-size: 0.8rem;
     font-weight: 700;
 }
 
+.planCard h3 {
+    color: #555;
+    margin-bottom: 0.5rem;
+}
+
 .speed {
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: 800;
-    color: #1a1a1a;
-    margin: 1rem 0;
+    color: #333;
+    margin-bottom: 1rem;
 }
 
 .price {
-    font-size: 1.5rem;
+    font-size: 2rem;
     color: #6200ea;
     font-weight: 700;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .price span {
-    font-size: 0.9rem;
-    color: #777;
-    font-weight: 400;
+    font-size: 1rem;
+    color: #999;
 }
 
 .planCard ul {
@@ -171,54 +181,63 @@
     text-align: left;
 }
 
-.planCard li {
+.planCard ul li {
     padding: 0.5rem 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #f0f0f0;
+    color: #666;
 }
 
 .planButton {
     width: 100%;
-    padding: 0.8rem;
-    border: 2px solid #6200ea;
-    background: transparent;
-    color: #6200ea;
-    font-weight: 700;
+    padding: 1rem;
+    background: #333;
+    color: white;
+    border: none;
     border-radius: 0.5rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.2s;
 }
 
-.featured .planButton {
+.planCard.featured .planButton {
     background: #6200ea;
-    color: white;
 }
 
 .planButton:hover {
-    background: #6200ea;
-    color: white;
+    opacity: 0.9;
 }
 
+/* Chat Balloon */
 .chatBalloon {
     position: fixed;
     bottom: 2rem;
     right: 2rem;
-    background: white;
     width: 300px;
+    background: white;
     border-radius: 1rem;
-    box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
     z-index: 1000;
+    overflow: hidden;
     animation: slideIn 0.5s ease;
 }
 
 @keyframes slideIn {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .balloonHeader {
     display: flex;
     justify-content: flex-end;
     padding: 0.5rem;
+    background: #f8f9fa;
 }
 
 .balloonHeader button {
@@ -230,27 +249,126 @@
 }
 
 .balloonContent {
-    padding: 0 1.5rem 1.5rem;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.balloonContent p {
+    margin-bottom: 0.5rem;
+    color: #555;
 }
 
 .balloonLink {
-    display: block;
+    display: inline-block;
+    margin-top: 1rem;
     background: #6200ea;
     color: white;
-    text-align: center;
-    padding: 0.8rem;
-    border-radius: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 2rem;
     text-decoration: none;
-    margin-top: 1rem;
     font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
 }
 
-.balloonFooter {
+/* Chat Widget Modal */
+.chatWidgetOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    padding: 2rem;
+    z-index: 2000;
+}
+
+.chatWidget {
+    width: 350px;
+    height: 500px;
+    background: white;
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.chatWidgetHeader {
+    padding: 1rem;
+    background: #6200ea;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chatWidgetHeader button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.chatWidgetMessages {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
     background: #f5f5f7;
-    padding: 0.8rem;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.chatMsg {
+    padding: 0.8rem 1rem;
+    border-radius: 1rem;
+    max-width: 80%;
     font-size: 0.9rem;
-    border-bottom-left-radius: 1rem;
-    border-bottom-right-radius: 1rem;
-    color: #555;
+}
+
+.userMsg {
+    align-self: flex-end;
+    background: #6200ea;
+    color: white;
+    border-bottom-right-radius: 0.2rem;
+}
+
+.botMsg {
+    align-self: flex-start;
+    background: white;
+    color: #333;
+    border-bottom-left-radius: 0.2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.chatWidgetInput {
+    padding: 1rem;
+    background: white;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.chatWidgetInput input {
+    flex: 1;
+    border: 1px solid #ddd;
+    padding: 0.6rem;
+    border-radius: 1.5rem;
+    outline: none;
+}
+
+.chatWidgetInput button {
+    background: #6200ea;
+    color: white;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
 }
