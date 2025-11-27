@@ -1,454 +1,187 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import ChatWidget from '../components/ChatWidget';
+import React, { useState, useRef, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import styles from './Support.module.css';
 
 export default function Support() {
-    const [step, setStep] = useState(1);
-    const [email, setEmail] = useState('');
-    const [client, setClient] = useState(null);
-    const [message, setMessage] = useState('');
-    const [ticket, setTicket] = useState(null);
-    const [boleto, setBoleto] = useState(null);
+    const { user, token, logout } = useAuth();
+    const [messages, setMessages] = useState([
+        { type: 'bot', text: `Olá, ${user?.sub?.split('@')[0] || 'Cliente'}! Sou sua assistente virtual. Como posso ajudar com seus planos hoje?` }
+    ]);
+    const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [mode, setMode] = useState('support'); // 'support' or 'boleto'
+    const [sessionId] = useState(() => 'session-' + Math.random().toString(36).substr(2, 9));
+    const messagesEndRef = useRef(null);
 
-    const handleCheckEmail = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await fetch(`/api/clientes/buscar?email=${email}`);
-            if (!response.ok) {
-                if (response.status === 404) {
-                    // Show 0800 card instead of throwing error
-                    setStep('non-client');
-                    return;
-                }
-                throw new Error('Erro ao buscar cliente.');
-            }
-            const data = await response.json();
-            setClient(data);
-            setStep(2);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
+    // Mock Data for Sidebar (In a real app, fetch from API)
+    const contracts = [
+        { id: 1, plan: 'Internet Fibra 500MB', status: 'Ativo' },
+        { id: 2, plan: 'Móvel 5G', status: 'Ativo' }
+    ];
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
-    const handleCreateTicket = async (e) => {
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
+    const handleSend = async (e) => {
         e.preventDefault();
+        if (!input.trim()) return;
+
+        const userMessage = input;
+        setMessages(prev => [...prev, { type: 'user', text: userMessage }]);
+        setInput('');
         setLoading(true);
-        setError(null);
+
         try {
-            const response = await fetch('/api/chamados/public', {
+            const response = await fetch('/api/chat/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
-                    cliente_id: client.id,
-                    canal: 'site',
-                    mensagem: message
+                    message: userMessage,
+                    session_id: sessionId
                 })
             });
 
             if (!response.ok) {
-                throw new Error('Erro ao processar sua solicitação.');
+                throw new Error('Erro na comunicação com o servidor');
             }
 
             const data = await response.json();
-            setTicket(data);
-            setStep(3);
+
+            setMessages(prev => [...prev, {
+                type: 'bot',
+                text: data.response
+            }]);
+
         } catch (err) {
-            setError(err.message);
+            console.error(err);
+            setMessages(prev => [...prev, { type: 'bot', text: 'Desculpe, tive um problema técnico. Tente novamente em instantes.' }]);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleGerarBoleto = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await fetch('/api/boletos/gerar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
-            });
+    const [showNPS, setShowNPS] = useState(false);
+    const [npsScore, setNpsScore] = useState(0);
 
-            if (!response.ok) {
-                if (response.status === 404) {
-                    throw new Error('Nenhum boleto pendente encontrado para este e-mail.');
-                }
-                throw new Error('Erro ao gerar boleto.');
-            }
+    const handleFinish = () => {
+        setShowNPS(true);
+    };
 
-            const data = await response.json();
-            setBoleto(data);
-            setStep('boleto-result');
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
+    const submitNPS = () => {
+        // In a real app, send to backend
+        alert(`Obrigado pela avaliação: ${npsScore}`);
+        setShowNPS(false);
+        setMessages(prev => [...prev, { type: 'bot', text: 'Atendimento finalizado. Obrigado!' }]);
     };
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-            color: 'white'
-        }}>
-            <div className="glass-panel" style={{ width: '100%', maxWidth: '600px', padding: '3rem', margin: '1rem' }}>
-                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                    <h1 className="hero-title" style={{ fontSize: '2rem' }}>Central de Ajuda</h1>
-                    <p style={{ color: 'var(--text-secondary)' }}>Atendimento Inteligente 24h</p>
+        <div className={styles.container}>
+            {/* Sidebar */}
+            <aside className={styles.sidebar}>
+                <div className={styles.logo}>Central<span className={styles.highlight}>Inteligente</span></div>
+
+                <div className={styles.userInfo}>
+                    <div className={styles.avatar}>{user?.sub?.charAt(0).toUpperCase()}</div>
+                    <div className={styles.userDetails}>
+                        <span className={styles.userName}>{user?.sub}</span>
+                        <span className={styles.userRole}>Cliente</span>
+                    </div>
                 </div>
 
-                {/* Mode Selection */}
-                {step === 1 && !mode.startsWith('selected') && (
-                    <div style={{ display: 'grid', gap: '1rem' }}>
-                        <button
-                            onClick={() => { setMode('support'); setStep('email-input'); }}
-                            className="glass-panel"
-                            style={{
-                                padding: '1.5rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '1rem',
-                                cursor: 'pointer',
-                                border: '1px solid var(--glass-border)',
-                                background: 'rgba(255,255,255,0.05)',
-                                transition: 'transform 0.2s',
-                                textAlign: 'left'
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                        >
-                            <div style={{ fontSize: '2rem' }}>💬</div>
-                            <div>
-                                <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Falar com Suporte</div>
-                                <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Tire dúvidas ou relate problemas</div>
-                            </div>
-                        </button>
+                <nav className={styles.nav}>
+                    <h3>Meus Serviços</h3>
+                    <ul>
+                        {contracts.map(c => (
+                            <li key={c.id} className={styles.navItem}>
+                                <span className={styles.statusDot}></span>
+                                {c.plan}
+                            </li>
+                        ))}
+                    </ul>
 
-                        <button
-                            onClick={() => { setMode('boleto'); setStep('email-input'); }}
-                            className="glass-panel"
-                            style={{
-                                padding: '1.5rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '1rem',
-                                cursor: 'pointer',
-                                border: '1px solid var(--glass-border)',
-                                background: 'rgba(255,255,255,0.05)',
-                                transition: 'transform 0.2s',
-                                textAlign: 'left'
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                        >
-                            <div style={{ fontSize: '2rem' }}>📄</div>
-                            <div>
-                                <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>2ª Via de Boleto</div>
-                                <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Gere seu boleto atualizado</div>
-                            </div>
-                        </button>
-                    </div>
-                )}
+                    <h3>Atalhos</h3>
+                    <ul>
+                        <li>📄 Segunda via de Fatura</li>
+                        <li>🔧 Suporte Técnico</li>
+                        <li>💳 Alterar Forma de Pagamento</li>
+                    </ul>
+                </nav>
 
-                {/* STEP: Email Input (Shared) */}
-                {step === 'email-input' && (
-                    <form onSubmit={mode === 'support' ? handleCheckEmail : handleGerarBoleto}>
-                        <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <button
-                                type="button"
-                                onClick={() => setStep(1)}
-                                style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.2rem' }}
-                            >
-                                ←
-                            </button>
-                            <h2 style={{ fontSize: '1.2rem', margin: 0 }}>
-                                {mode === 'support' ? 'Identificação' : 'Gerar Boleto'}
-                            </h2>
-                        </div>
+                <button onClick={logout} className={styles.logoutButton}>Sair</button>
+            </aside>
 
-                        <p style={{ marginBottom: '1.5rem', lineHeight: '1.6' }}>
-                            Por favor, informe seu e-mail para continuar.
-                        </p>
-
-                        {error && (
-                            <div style={{ padding: '1rem', background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,0,0,0.2)', borderRadius: '8px', color: '#ff6b6b', marginBottom: '1.5rem' }}>
-                                {error}
-                            </div>
-                        )}
-
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <input
-                                type="email"
-                                placeholder="seu@email.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                style={{
-                                    width: '100%',
-                                    padding: '12px',
-                                    borderRadius: '8px',
-                                    border: '1px solid var(--glass-border)',
-                                    background: 'rgba(255,255,255,0.05)',
-                                    color: 'white',
-                                    outline: 'none',
-                                    fontSize: '1rem'
-                                }}
-                            />
-                        </div>
-
-                        <button
-                            type="submit"
-                            className="btn-primary"
-                            style={{ width: '100%', padding: '12px' }}
-                            disabled={loading}
-                        >
-                            {loading ? 'Processando...' : 'Continuar'}
-                        </button>
-                    </form>
-                )}
-
-                {/* STEP: Non-Client (0800) */}
-                {step === 'non-client' && (
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📞</div>
-                        <h2 style={{ marginBottom: '1rem' }}>Cadastro não encontrado</h2>
-                        <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-                            Não localizamos seu e-mail em nossa base de clientes.
-                            Para suporte, entre em contato com nossa central:
-                        </p>
-
-                        <div style={{
-                            background: 'rgba(59, 130, 246, 0.1)',
-                            border: '1px solid rgba(59, 130, 246, 0.3)',
-                            borderRadius: '12px',
-                            padding: '1.5rem',
-                            marginBottom: '2rem'
-                        }}>
-                            <div style={{ fontSize: '0.9rem', color: '#60a5fa', marginBottom: '0.5rem' }}>Central de Atendimento</div>
-                            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'white' }}>0800 123 4567</div>
-                        </div>
-
-                        <button
-                            onClick={() => {
-                                setStep(1);
-                                setEmail('');
-                            }}
-                            style={{
-                                background: 'transparent',
-                                border: '1px solid var(--glass-border)',
-                                color: 'white',
-                                padding: '10px 20px',
-                                borderRadius: '8px',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            Tentar outro e-mail
-                        </button>
-                    </div>
-                )}
-
-                {/* STEP: Boleto Result */}
-                {step === 'boleto-result' && boleto && (
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
-                        <h2 style={{ marginBottom: '1rem' }}>Boleto Gerado!</h2>
-
-                        <div style={{
-                            background: 'white',
-                            color: 'black',
-                            padding: '1.5rem',
-                            borderRadius: '8px',
-                            marginBottom: '1.5rem',
-                            textAlign: 'left'
-                        }}>
-                            <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>Código de Barras:</div>
-                            <div style={{ fontFamily: 'monospace', fontSize: '1.1rem', wordBreak: 'break-all', fontWeight: 'bold' }}>
-                                {boleto.codigo_barras}
-                            </div>
-                            <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between' }}>
-                                <div>
-                                    <div style={{ fontSize: '0.8rem', color: '#666' }}>Valor</div>
-                                    <div style={{ fontWeight: 'bold' }}>R$ {boleto.valor.toFixed(2)}</div>
-                                </div>
-                                <div>
-                                    <div style={{ fontSize: '0.8rem', color: '#666' }}>Vencimento</div>
-                                    <div style={{ fontWeight: 'bold' }}>{boleto.vencimento}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <a
-                            href={boleto.link_pdf}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn-primary"
-                            style={{
-                                display: 'block',
-                                width: '100%',
-                                padding: '12px',
-                                textAlign: 'center',
-                                textDecoration: 'none',
-                                marginBottom: '1rem'
-                            }}
-                        >
-                            Baixar PDF
-                        </a>
-
-                        <button
-                            onClick={() => {
-                                setStep(1);
-                                setBoleto(null);
-                                setEmail('');
-                            }}
-                            style={{
-                                background: 'transparent',
-                                border: 'none',
-                                color: 'var(--text-secondary)',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            Voltar ao início
-                        </button>
-                    </div>
-                )}
-
-                {/* STEP 2: Chat / Problem Description */}
-                {step === 2 && (
-                    <form onSubmit={handleCreateTicket}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '1px solid var(--glass-border)' }}>
-                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                👤
-                            </div>
-                            <div>
-                                <div style={{ fontWeight: 'bold' }}>Olá, {client.nome}</div>
-                                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Como podemos ajudar hoje?</div>
-                            </div>
-                        </div>
-
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <textarea
-                                rows="5"
-                                placeholder="Descreva seu problema ou dúvida..."
-                                value={message}
-                                onChange={(e) => setMessage(e.target.value)}
-                                required
-                                style={{
-                                    width: '100%',
-                                    padding: '12px',
-                                    borderRadius: '8px',
-                                    border: '1px solid var(--glass-border)',
-                                    background: 'rgba(255,255,255,0.05)',
-                                    color: 'white',
-                                    outline: 'none',
-                                    fontSize: '1rem',
-                                    resize: 'vertical'
-                                }}
-                            />
-                        </div>
-
-                        <button
-                            type="submit"
-                            className="btn-primary"
-                            style={{ width: '100%', padding: '12px' }}
-                            disabled={loading}
-                        >
-                            {loading ? 'Analisando com IA...' : 'Enviar Mensagem'}
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() => setStep(1)}
-                            style={{
-                                width: '100%',
-                                padding: '12px',
-                                marginTop: '1rem',
-                                background: 'transparent',
-                                border: 'none',
-                                color: 'var(--text-secondary)',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            Voltar
-                        </button>
-                    </form>
-                )}
-
-                {/* STEP 3: AI Response */}
-                {step === 3 && ticket && (
+            {/* Main Chat Area */}
+            <main className={styles.main}>
+                <div className={styles.chatHeader}>
                     <div>
-                        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                            <div style={{
-                                width: '60px', height: '60px', borderRadius: '50%',
-                                background: ticket.resolvido_automaticamente ? '#10b981' : '#f59e0b',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                margin: '0 auto 1rem auto', fontSize: '2rem'
-                            }}>
-                                {ticket.resolvido_automaticamente ? '✅' : '👩‍💻'}
-                            </div>
-                            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>
-                                {ticket.resolvido_automaticamente ? 'Resolvido!' : 'Encaminhado'}
-                            </h2>
-                            <p style={{ color: 'var(--text-secondary)' }}>
-                                Protocolo: #{ticket.chamado_id}
-                            </p>
+                        <h2>Atendimento Virtual</h2>
+                        <div className={styles.platformFlags}>
+                            <span className={styles.flag} title="Você está no Site">🌐 Site</span>
+                            {/* Mock flags for other channels */}
+                            {/* <span className={styles.flag}>📱 WhatsApp</span> */}
                         </div>
+                    </div>
+                    <button onClick={handleFinish} className={styles.finishButton}>Finalizar Atendimento</button>
+                </div>
 
-                        <div style={{
-                            background: 'rgba(255,255,255,0.05)',
-                            padding: '1.5rem',
-                            borderRadius: '12px',
-                            border: '1px solid var(--glass-border)',
-                            marginBottom: '2rem'
-                        }}>
-                            <p style={{ lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
-                                {ticket.resposta}
-                            </p>
-                        </div>
-
-                        {ticket.encaminhado_para_humano && (
-                            <div style={{
-                                background: 'rgba(245, 158, 11, 0.1)',
-                                padding: '1rem',
-                                borderRadius: '8px',
-                                border: '1px solid rgba(245, 158, 11, 0.2)',
-                                color: '#fbbf24',
-                                fontSize: '0.9rem',
-                                marginBottom: '2rem',
-                                textAlign: 'center'
-                            }}>
-                                ⚠️ Seu caso foi classificado como prioritário e um de nossos especialistas entrará em contato em breve.
+                <div className={styles.messagesArea}>
+                    {messages.map((msg, idx) => (
+                        <div key={idx} className={`${styles.messageRow} ${msg.type === 'user' ? styles.userRow : styles.botRow}`}>
+                            <div className={`${styles.message} ${msg.type === 'user' ? styles.userMessage : styles.botMessage}`}>
+                                {msg.text}
                             </div>
-                        )}
+                        </div>
+                    ))}
+                    {loading && <div className={styles.loading}>Digitando...</div>}
+                    <div ref={messagesEndRef} />
+                </div>
 
-                        <button
-                            onClick={() => {
-                                setStep(2);
-                                setMessage('');
-                                setTicket(null);
-                            }}
-                            className="btn-primary"
-                            style={{ width: '100%', padding: '12px' }}
-                        >
-                            Nova Solicitação
+                <form onSubmit={handleSend} className={styles.inputArea}>
+                    <div className={styles.inputWrapper}>
+                        <input
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Digite sua mensagem..."
+                            disabled={loading}
+                        />
+                        <button type="submit" disabled={loading || !input.trim()}>
+                            ➤
                         </button>
+                    </div>
+                </form>
 
-
+                {/* NPS Modal */}
+                {showNPS && (
+                    <div className={styles.modalOverlay}>
+                        <div className={styles.modal}>
+                            <h3>Como foi seu atendimento?</h3>
+                            <p>De 0 a 10, qual a probabilidade de você recomendar nossa empresa?</p>
+                            <div className={styles.npsGrid}>
+                                {[...Array(11).keys()].map(num => (
+                                    <button
+                                        key={num}
+                                        className={`${styles.npsButton} ${npsScore === num ? styles.selected : ''}`}
+                                        onClick={() => setNpsScore(num)}
+                                    >
+                                        {num}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className={styles.modalActions}>
+                                <button onClick={() => setShowNPS(false)} className={styles.cancelButton}>Cancelar</button>
+                                <button onClick={submitNPS} className={styles.submitButton}>Enviar Avaliação</button>
+                            </div>
+                        </div>
                     </div>
                 )}
-            </div>
-            <ChatWidget />
+            </main>
         </div>
     );
 }

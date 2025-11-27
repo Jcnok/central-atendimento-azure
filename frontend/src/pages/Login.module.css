@@ -1,0 +1,132 @@
+.container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f5f5f7;
+    font-family: 'Inter', sans-serif;
+}
+
+.card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 400px;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.header h2 {
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+}
+
+.header p {
+    color: #777;
+    font-size: 0.9rem;
+}
+
+.tabs {
+    display: flex;
+    background: #f0f0f0;
+    padding: 0.25rem;
+    border-radius: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.tab {
+    flex: 1;
+    padding: 0.6rem;
+    border: none;
+    background: transparent;
+    border-radius: 0.4rem;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab.active {
+    background: white;
+    color: #6200ea;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.inputGroup label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.inputGroup input {
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.inputGroup input:focus {
+    border-color: #6200ea;
+    outline: none;
+}
+
+.submitButton {
+    background: #6200ea;
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.submitButton:hover {
+    background: #3700b3;
+}
+
+.submitButton:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.error {
+    background: #fee;
+    color: #e00;
+    padding: 0.8rem;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.footer a {
+    color: #6200ea;
+    text-decoration: none;
+    font-weight: 600;
+}

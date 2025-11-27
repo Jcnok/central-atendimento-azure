@@ -1,113 +1,138 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import styles from './Dashboard.module.css';
 
 export default function Dashboard() {
-    const { user, token } = useAuth();
-    const navigate = useNavigate();
-    const [metrics, setMetrics] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { token, logout } = useAuth();
+    const [kpis, setKpis] = useState(null);
+    const [tickets, setTickets] = useState([]);
+    const [agentQuery, setAgentQuery] = useState('');
+    const [agentResponse, setAgentResponse] = useState('');
+    const [loadingAgent, setLoadingAgent] = useState(false);
 
     useEffect(() => {
-        fetchMetrics();
+        fetchDashboardData();
     }, []);
 
-    const fetchMetrics = async () => {
+    const fetchDashboardData = async () => {
         try {
-            const response = await fetch('/api/metricas/', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setMetrics(data);
-            }
-        } catch (err) {
-            console.error('Erro ao buscar métricas:', err);
-        } finally {
-            setLoading(false);
+            const headers = { 'Authorization': `Bearer ${token}` };
+
+            const kpiRes = await fetch('/api/dashboard/kpis', { headers });
+            const kpiData = await kpiRes.json();
+            setKpis(kpiData);
+
+            const ticketRes = await fetch('/api/dashboard/tickets', { headers });
+            const ticketData = await ticketRes.json();
+            setTickets(ticketData);
+        } catch (error) {
+            console.error("Error fetching dashboard data:", error);
         }
     };
 
-    const StatCard = ({ title, value, icon, color }) => (
-        <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', flex: 1, minWidth: '200px' }}>
-            <div style={{
-                width: '50px', height: '50px', borderRadius: '12px',
-                background: color, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '1.5rem'
-            }}>
-                {icon}
-            </div>
-            <div>
-                <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{title}</div>
-                <div style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>{value}</div>
-            </div>
-        </div>
-    );
+    const handleAgentSubmit = async (e) => {
+        e.preventDefault();
+        if (!agentQuery.trim()) return;
+
+        setLoadingAgent(true);
+        setAgentResponse('');
+
+        try {
+            const response = await fetch('/api/dashboard/agent', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ query: agentQuery })
+            });
+
+            const data = await response.json();
+            setAgentResponse(data.response);
+        } catch (error) {
+            setAgentResponse("Erro ao consultar o agente. Tente novamente.");
+        } finally {
+            setLoadingAgent(false);
+        }
+    };
 
     return (
-        <div>
-            <h1 style={{ marginBottom: '0.5rem' }}>Olá, {user?.username} 👋</h1>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Aqui está o resumo do atendimento hoje.</p>
+        <div className={styles.container}>
+            <header className={styles.header}>
+                <h1>Dashboard Administrativo</h1>
+                <button onClick={logout} className={styles.logoutButton}>Sair</button>
+            </header>
 
-            {loading ? (
-                <p>Carregando métricas...</p>
-            ) : metrics ? (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '3rem' }}>
-                    <StatCard
-                        title="Total de Chamados"
-                        value={metrics.total_chamados}
-                        icon="🎫"
-                        color="rgba(59, 130, 246, 0.2)"
-                    />
-                    <StatCard
-                        title="Resolvidos por IA"
-                        value={metrics.chamados_resolvidos_automaticamente}
-                        icon="🤖"
-                        color="rgba(16, 185, 129, 0.2)"
-                    />
-                    <StatCard
-                        title="Taxa de Resolução"
-                        value={metrics.taxa_resolucao_automatica}
-                        icon="📈"
-                        color="rgba(139, 92, 246, 0.2)"
-                    />
-                    <StatCard
-                        title="Total de Clientes"
-                        value={metrics.total_clientes}
-                        icon="👥"
-                        color="rgba(245, 158, 11, 0.2)"
-                    />
+            {/* KPIs Section */}
+            <section className={styles.kpiSection}>
+                <div className={styles.kpiCard}>
+                    <h3>Total Clientes</h3>
+                    <div className={styles.value}>{kpis?.total_clientes || '-'}</div>
                 </div>
-            ) : (
-                <p>Não foi possível carregar as métricas.</p>
-            )}
+                <div className={styles.kpiCard}>
+                    <h3>Contratos Ativos</h3>
+                    <div className={styles.value}>{kpis?.contratos_ativos || '-'}</div>
+                </div>
+                <div className={styles.kpiCard}>
+                    <h3>Chamados Abertos</h3>
+                    <div className={styles.value}>{kpis?.chamados_abertos || '-'}</div>
+                </div>
+                <div className={styles.kpiCard}>
+                    <h3>NPS Médio</h3>
+                    <div className={styles.value}>{kpis?.nps_medio || '-'}</div>
+                </div>
+            </section>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-                <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>
-                    <h3>Ações Rápidas</h3>
-                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem' }}>
-                        <button className="btn-primary" onClick={() => navigate('/tickets')}>Ver Chamados</button>
-                        <button className="btn-primary" onClick={() => navigate('/clients')} style={{ background: 'transparent', border: '1px solid white' }}>Gerenciar Clientes</button>
-                    </div>
-                </div>
+            <div className={styles.mainGrid}>
+                {/* Recent Tickets */}
+                <section className={styles.ticketsSection}>
+                    <h2>Chamados Recentes</h2>
+                    <table className={styles.table}>
+                        <thead>
+                            <tr>
+                                <th>Protocolo</th>
+                                <th>Status</th>
+                                <th>Prioridade</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {tickets.map(t => (
+                                <tr key={t.id}>
+                                    <td>{t.protocolo}</td>
+                                    <td><span className={`${styles.badge} ${styles[t.status]}`}>{t.status}</span></td>
+                                    <td>{t.prioridade}</td>
+                                    <td>{new Date(t.data).toLocaleDateString()}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </section>
 
-                <div className="glass-panel" style={{ padding: '2rem' }}>
-                    <h3>Status do Sistema</h3>
-                    <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span>API Backend</span>
-                            <span style={{ color: '#10b981' }}>● Online</span>
+                {/* CRM Agent */}
+                <section className={styles.agentSection}>
+                    <h2>🤖 Agente CRM (SQL)</h2>
+                    <p>Pergunte sobre dados da base (ex: "Quantos clientes cancelaram este mês?", "Liste clientes com faturas atrasadas")</p>
+
+                    <form onSubmit={handleAgentSubmit} className={styles.agentForm}>
+                        <textarea
+                            value={agentQuery}
+                            onChange={(e) => setAgentQuery(e.target.value)}
+                            placeholder="Digite sua pergunta..."
+                            rows="3"
+                        />
+                        <button type="submit" disabled={loadingAgent}>
+                            {loadingAgent ? 'Consultando...' : 'Perguntar'}
+                        </button>
+                    </form>
+
+                    {agentResponse && (
+                        <div className={styles.agentResult}>
+                            <strong>Resposta:</strong>
+                            <p>{agentResponse}</p>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span>Banco de Dados</span>
-                            <span style={{ color: '#10b981' }}>● Conectado</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span>IA Classifier</span>
-                            <span style={{ color: '#10b981' }}>● Ativo</span>
-                        </div>
-                    </div>
-                </div>
+                    )}
+                </section>
             </div>
         </div>
     );

@@ -12,14 +12,16 @@ from sqlalchemy import select
 from src.config.database import get_db
 from src.config.settings import settings
 from src.models.user import User
+from src.models.cliente import Cliente
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login") # Fixed tokenUrl path
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False) # Fixed tokenUrl path
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class TokenData(BaseModel):
     username: Optional[str] = None
+    role: Optional[str] = "admin" # "admin" or "client"
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -56,12 +58,16 @@ async def get_current_user(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
         username: str = payload.get("sub")
+        role: str = payload.get("role", "admin")
         if username is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
+        token_data = TokenData(username=username, role=role)
     except JWTError:
         raise credentials_exception
     
+    if token_data.role != "admin":
+         raise credentials_exception
+
     # Async query
     result = await db.execute(select(User).filter(User.username == token_data.username))
     user = result.scalars().first()
@@ -69,3 +75,55 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
+async def get_current_client(
+    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
+):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        username: str = payload.get("sub") # Email for clients
+        role: str = payload.get("role", "client")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username, role=role)
+    except JWTError:
+        raise credentials_exception
+    
+    if token_data.role != "client":
+         raise credentials_exception
+
+    # Async query
+    result = await db.execute(select(Cliente).filter(Cliente.email == token_data.username))
+    cliente = result.scalars().first()
+    
+    if cliente is None:
+        raise credentials_exception
+    return cliente
+
+async def get_optional_current_client(
+    token: Optional[str] = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
+):
+    if not token:
+        return None
+        
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        username: str = payload.get("sub")
+        role: str = payload.get("role", "client")
+        if username is None or role != "client":
+            return None
+            
+        result = await db.execute(select(Cliente).filter(Cliente.email == username))
+        cliente = result.scalars().first()
+        return cliente
+    except JWTError:
+        return None

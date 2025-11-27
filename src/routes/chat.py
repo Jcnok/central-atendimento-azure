@@ -24,10 +24,14 @@ class ChatResponse(BaseModel):
 def get_orchestrator():
     return AgentOrchestrator()
 
+from src.utils.security import get_optional_current_client
+from src.models.cliente import Cliente
+
 @router.post("/", response_model=ChatResponse)
 async def chat_endpoint(
     request: ChatRequest,
-    orchestrator: AgentOrchestrator = Depends(get_orchestrator)
+    orchestrator: AgentOrchestrator = Depends(get_orchestrator),
+    client: Optional[Cliente] = Depends(get_optional_current_client)
 ):
     """
     Process a chat message through the Agent Orchestrator.
@@ -36,6 +40,11 @@ async def chat_endpoint(
         # Prepare context
         context = request.context or {}
         context["session_id"] = request.session_id
+        
+        if client:
+            context["client_id"] = client.id
+            context["client_name"] = client.nome
+            context["client_email"] = client.email
         
         # Process
         result = await orchestrator.process_message(request.message, context)

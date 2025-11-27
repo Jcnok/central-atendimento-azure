@@ -1,5 +1,10 @@
-from .chamado import Chamado
+from .user import User
 from .cliente import Cliente
+from .chamado import Chamado
 from .metrica import Metrica
-
-__all__ = ["Cliente", "Chamado", "Metrica"]
+from .plano import Plano
+from .atendente import Atendente
+from .contrato import Contrato
+from .fatura import Fatura
+from .pagamento import Pagamento
+from .historico_atendimento import HistoricoAtendimento

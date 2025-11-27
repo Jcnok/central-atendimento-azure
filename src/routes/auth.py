@@ -45,5 +45,28 @@ async def login(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token = create_access_token(data={"sub": user.username})
+    access_token = create_access_token(data={"sub": user.username, "role": "admin"})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/login/client")
+async def login_client(
+    form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
+):
+    """
+    Login for Clients using Email as username.
+    """
+    from src.models.cliente import Cliente
+    
+    # Check if client exists by email
+    result = await db.execute(select(Cliente).filter(Cliente.email == form_data.username))
+    cliente = result.scalars().first()
+    
+    if not cliente or not verify_password(form_data.password, cliente.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token = create_access_token(data={"sub": cliente.email, "role": "client"})
     return {"access_token": access_token, "token_type": "bearer"}

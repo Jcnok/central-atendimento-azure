@@ -1,0 +1,342 @@
+.container {
+    display: flex;
+    height: 100vh;
+    background: #f5f5f7;
+    font-family: 'Inter', sans-serif;
+}
+
+.sidebar {
+    width: 280px;
+    background: white;
+    border-right: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+}
+
+.logo {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: #1a1a1a;
+}
+
+.highlight {
+    color: #6200ea;
+}
+
+.userInfo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 2rem;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    background: #6200ea;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.userDetails {
+    display: flex;
+    flex-direction: column;
+}
+
+.userName {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.userRole {
+    font-size: 0.8rem;
+    color: #777;
+}
+
+.nav h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 1rem;
+    letter-spacing: 0.5px;
+}
+
+.nav ul {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 2rem;
+}
+
+.nav li {
+    padding: 0.8rem;
+    color: #555;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav li:hover {
+    background: #f5f5f7;
+    color: #6200ea;
+}
+
+.statusDot {
+    width: 8px;
+    height: 8px;
+    background: #00c853;
+    border-radius: 50%;
+}
+
+.logoutButton {
+    margin-top: auto;
+    background: none;
+    border: 1px solid #eee;
+    padding: 0.8rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s;
+}
+
+.logoutButton:hover {
+    background: #fee;
+    color: #e00;
+    border-color: #fee;
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    margin: 1rem;
+    border-radius: 1rem;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.chatHeader {
+    padding: 1.5rem;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chatHeader h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #1a1a1a;
+}
+
+.platformFlags {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.flag {
+    background: #e3f2fd;
+    color: #1565c0;
+    padding: 0.3rem 0.8rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.messagesArea {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.messageRow {
+    display: flex;
+}
+
+.userRow {
+    justify-content: flex-end;
+}
+
+.botRow {
+    justify-content: flex-start;
+}
+
+.message {
+    max-width: 70%;
+    padding: 1rem 1.5rem;
+    border-radius: 1rem;
+    line-height: 1.5;
+    font-size: 1rem;
+    white-space: pre-wrap;
+}
+
+.userMessage {
+    background: #6200ea;
+    color: white;
+    border-bottom-right-radius: 0.2rem;
+}
+
+.botMessage {
+    background: #f5f5f7;
+    color: #333;
+    border-bottom-left-radius: 0.2rem;
+}
+
+.loading {
+    color: #999;
+    font-size: 0.9rem;
+    margin-left: 1rem;
+}
+
+.inputArea {
+    padding: 1.5rem;
+    background: white;
+    border-top: 1px solid #eee;
+}
+
+.inputWrapper {
+    display: flex;
+    background: #f5f5f7;
+    border-radius: 2rem;
+    padding: 0.5rem;
+    border: 1px solid transparent;
+    transition: border-color 0.2s;
+}
+
+.inputWrapper:focus-within {
+    border-color: #6200ea;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(98, 0, 234, 0.1);
+}
+
+.inputWrapper input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    outline: none;
+}
+
+.inputWrapper button {
+    background: #6200ea;
+    color: white;
+    border: none;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: transform 0.2s;
+}
+
+.inputWrapper button:hover:not(:disabled) {
+    transform: scale(1.1);
+}
+
+.inputWrapper button:disabled {
+    background: #ccc;
+    cursor: default;
+}
+
+.finishButton {
+    background: #ff3d00;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal {
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+}
+
+.npsGrid {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 2rem 0;
+    flex-wrap: wrap;
+}
+
+.npsButton {
+    width: 35px;
+    height: 35px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.npsButton:hover,
+.npsButton.selected {
+    background: #6200ea;
+    color: white;
+    border-color: #6200ea;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.cancelButton {
+    background: transparent;
+    border: 1px solid #ddd;
+    padding: 0.8rem 1.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+
+.submitButton {
+    background: #6200ea;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 600;
+}

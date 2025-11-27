@@ -4,12 +4,15 @@ import styles from './ChatWidget.module.css';
 export default function ChatWidget() {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { type: 'bot', text: 'Olá! Sou a IA de atendimento. Posso consultar o status do seu chamado. Qual o número do protocolo?' }
+        { type: 'bot', text: 'Olá! Sou a IA da Central de Atendimento. Posso ajudar com boletos, suporte técnico, vendas ou dúvidas gerais. Como posso ajudar hoje?' }
     ]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
+
+    // Generate session ID on mount
+    const [sessionId] = useState(() => 'session-' + Math.random().toString(36).substr(2, 9));
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -34,33 +37,32 @@ export default function ChatWidget() {
         setInput('');
         setLoading(true);
 
-        // Check if input is a number (ticket ID)
-        const ticketId = parseInt(userMessage);
-        if (isNaN(ticketId)) {
-            setMessages(prev => [...prev, { type: 'bot', text: 'Por favor, digite apenas o número do protocolo (ex: 123).' }]);
-            setLoading(false);
-            return;
-        }
-
         try {
-            const response = await fetch(`/api/chamados/public/${ticketId}`);
-            if (!response.ok) {
-                throw new Error('Chamado não encontrado');
-            }
-            const data = await response.json();
+            const response = await fetch('/api/chat/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: userMessage,
+                    session_id: sessionId
+                })
+            });
 
-            let statusText = '';
-            if (data.status === 'resolvido') statusText = '✅ Seu chamado foi resolvido automaticamente.';
-            else if (data.status === 'encaminhado') statusText = '⚠️ Seu chamado foi encaminhado para um especialista e está em análise.';
-            else statusText = `ℹ️ Seu chamado está com status: ${data.status}`;
+            if (!response.ok) {
+                throw new Error('Erro na comunicação com o servidor');
+            }
+
+            const data = await response.json();
 
             setMessages(prev => [...prev, {
                 type: 'bot',
-                text: `${statusText}\n\nÚltima resposta: "${data.resposta_automatica}"`
+                text: data.response
             }]);
 
         } catch (err) {
-            setMessages(prev => [...prev, { type: 'bot', text: 'Não encontrei nenhum chamado com esse número. Verifique e tente novamente.' }]);
+            console.error(err);
+            setMessages(prev => [...prev, { type: 'bot', text: 'Desculpe, tive um problema técnico. Tente novamente em instantes.' }]);
         } finally {
             setLoading(false);
         }

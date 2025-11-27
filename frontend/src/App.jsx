@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import LoginForm from './components/LoginForm';
 import Signup from './pages/Signup';
 import Support from './pages/Support';
 import Layout from './components/Layout';
@@ -11,11 +10,19 @@ import Agent from './pages/Agent';
 import Settings from './pages/Settings';
 import './index.css'
 
-function ProtectedRoute({ children }) {
+import Home from './pages/Home';
+import Login from './pages/Login';
+
+function ProtectedRoute({ children, role }) {
   const { user, loading } = useAuth();
 
   if (loading) return <div>Carregando...</div>;
   if (!user) return <Navigate to="/login" />;
+
+  // Simple role check (in a real app, decode token or check user object)
+  // For now, we assume if user has 'email' property it's a client (from our seed), 
+  // if it has 'username' it's admin. Or we can check the token role if stored.
+  // Let's rely on the backend redirecting or the user context.
 
   return <Layout>{children}</Layout>;
 }
@@ -26,11 +33,18 @@ function AppRoutes() {
   return (
     <div className="container-fluid">
       <Routes>
-        <Route path="/login" element={!user ? <LoginForm /> : <Navigate to="/" />} />
-        <Route path="/signup" element={!user ? <Signup /> : <Navigate to="/" />} />
-        <Route path="/support" element={<Support />} />
+        {/* Public Routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
+        <Route path="/signup" element={<Signup />} />
 
-        <Route path="/" element={
+        {/* Client Routes */}
+        <Route path="/support" element={
+          <Support />
+        } />
+
+        {/* Admin Routes */}
+        <Route path="/dashboard" element={
           <ProtectedRoute>
             <Dashboard />
           </ProtectedRoute>
