@@ -17,6 +17,7 @@ from src.routes.chamados import router as chamados_router
 from src.routes.clientes import router as clientes_router
 from src.routes.metricas import router as metricas_router
 from src.routes.boletos import router as boletos_router
+from src.routes.chat import router as chat_router
 
 # ==================== CONFIGURAÇÃO DE LOGGING ====================
 logging.basicConfig(level=logging.INFO)
@@ -40,6 +41,7 @@ async def lifespan(app: FastAPI):
 
 from fastapi.openapi.utils import get_openapi
 from src.utils.openapi_fix import fix_openapi_spec
+from src.config.observability import setup_observability
 
 # ==================== INICIALIZAÇÃO DO FASTAPI ====================
 app = FastAPI(
@@ -50,6 +52,8 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan,  # Adiciona o gerenciador de ciclo de vida
 )
+
+setup_observability(app)
 
 
 def custom_openapi():
@@ -114,6 +118,7 @@ app.include_router(clientes_router, prefix="/api")
 app.include_router(chamados_router, prefix="/api")
 app.include_router(metricas_router, prefix="/api")
 app.include_router(boletos_router, prefix="/api")
+app.include_router(chat_router, prefix="/api")
 
 
 # ==================== STATIC FILES (FRONTEND) ====================

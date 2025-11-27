@@ -1,0 +1,112 @@
+import json
+import logging
+from typing import Dict, Optional
+
+from semantic_kernel import Kernel
+from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
+from semantic_kernel.contents import ChatHistory
+from semantic_kernel.functions import kernel_function
+
+from src.config.settings import settings
+from src.services.general_service import GeneralService
+
+logger = logging.getLogger(__name__)
+
+class GeneralPlugin:
+    """Plugin for general inquiries."""
+    
+    @kernel_function(description="Busca respostas para perguntas frequentes (FAQ).")
+    def search_faq(self, query: str) -> str:
+        """
+        Busca FAQ.
+        Args:
+            query: Pergunta ou termo de busca.
+        """
+        results = GeneralService.search_faq(query)
+        if results:
+            return json.dumps(results)
+        return "Não encontrei uma resposta específica na FAQ."
+
+    @kernel_function(description="Obtém informações institucionais da empresa.")
+    def get_company_info(self, topic: str) -> str:
+        """
+        Info da empresa.
+        Args:
+            topic: Tópico (horário, endereço, contato).
+        """
+        return GeneralService.get_company_info(topic)
+
+class GeneralAgent:
+    """
+    Agent specialized in general inquiries.
+    """
+    
+    SYSTEM_PROMPT = """Você é o Agente Geral da Central de Atendimento.
+    Sua função é responder dúvidas simples, institucionais e direcionar o cliente.
+    
+    FERRAMENTAS:
+    1. search_faq: Use para responder perguntas comuns.
+    2. get_company_info: Use para dados como endereço, telefone e horários.
+    
+    REGRAS:
+    - Seja direto e cordial.
+    - Se a pergunta for muito técnica ou financeira, sugira que o cliente fale com o especialista (mas você não transfere, apenas avisa).
+    - Mantenha um tom de voz acolhedor.
+    """
+
+    def __init__(self):
+        self.kernel = Kernel()
+        
+        if settings.AZURE_OPENAI_KEY and settings.AZURE_OPENAI_ENDPOINT:
+            self.kernel.add_service(
+                AzureChatCompletion(
+                    service_id="general",
+                    deployment_name=settings.AZURE_OPENAI_DEPLOYMENT_GPT4O_MINI,
+                    endpoint=settings.AZURE_OPENAI_ENDPOINT,
+                    api_key=settings.AZURE_OPENAI_KEY,
+                    api_version=settings.AZURE_OPENAI_API_VERSION
+                )
+            )
+        else:
+            logger.warning("Azure OpenAI credentials not found. General Agent will not work correctly.")
+        
+        self.kernel.add_plugin(GeneralPlugin(), plugin_name="GeneralPlugin")
+        
+        logger.info("General Agent initialized")
+
+    async def process_message(self, message: str, context: Optional[Dict] = None) -> str:
+        """
+        Process a message using the agent.
+        """
+        chat_history = ChatHistory()
+        chat_history.add_system_message(self.SYSTEM_PROMPT)
+        
+        if context:
+             chat_history.add_system_message(f"Contexto do Cliente: {json.dumps(context, default=str)}")
+
+        chat_history.add_user_message(message)
+        
+        try:
+            chat_service = self.kernel.get_service(service_id="general")
+        except Exception as e:
+            logger.error(f"Failed to get chat service: {e}")
+            return "Desculpe, estou com problemas técnicos no momento."
+        
+        from semantic_kernel.connectors.ai.open_ai import AzureChatPromptExecutionSettings
+        from semantic_kernel.connectors.ai.function_choice_behavior import FunctionChoiceBehavior
+        
+        execution_settings = AzureChatPromptExecutionSettings(
+            temperature=0.5,
+            function_choice_behavior=FunctionChoiceBehavior.Auto()
+        )
+        
+        try:
+            result = await chat_service.get_chat_message_content(
+                chat_history=chat_history,
+                settings=execution_settings,
+                kernel=self.kernel
+            )
+            return str(result)
+        except Exception as e:
+            logger.error(f"Error processing message: {e}")
+            return "Ocorreu um erro ao processar sua solicitação."

@@ -2257,3 +2257,181 @@ Desenvolvido por **Julio Okuda**.
 -   **GitHub:** [@Jcnok](https://github.com/Jcnok)
 
 ```
+
+🗺️ Próximos Passos - Implementação de Agentes LLM
+✅ Fase 1 Concluída
+ Arquitetura de agentes projetada
+ Infraestrutura Azure provisionada
+ Router Agent implementado e testado
+ Dependências instaladas
+ Banco de dados configurado
+🚀 Fase 2: Agentes Especializados (Próximas 2-3 semanas)
+1. Financial Agent (Prioridade Alta)
+Objetivo: Automatizar solicitações financeiras (boletos, pagamentos, faturas)
+
+Tarefas:
+
+ Criar src/agents/financial_agent.py
+ Implementar tools:
+generate_boleto(cliente_id, valor) → integrar com 
+src/routes/boletos.py
+check_payment_status(boleto_id) → consultar status
+get_invoices(cliente_id, periodo) → listar faturas
+ Definir system prompt com regras de validação
+ Implementar fallback para humano
+ Criar testes unitários
+ Testar com casos reais
+Estimativa: 3-4 dias
+
+2. Technical Agent (Prioridade Alta)
+Objetivo: Diagnosticar problemas técnicos e criar tickets
+
+Tarefas:
+
+ Criar src/agents/technical_agent.py
+ Implementar tools:
+search_knowledge_base(query) → buscar soluções conhecidas
+create_ticket(description, priority) → criar chamado
+check_system_status() → verificar status de serviços
+ Implementar RAG (Retrieval-Augmented Generation):
+Buscar conversas similares em conversation_memory
+Usar embeddings para similarity search
+ Definir processo de diagnóstico estruturado
+ Criar testes unitários
+ Popular knowledge base com problemas comuns
+Estimativa: 4-5 dias
+
+3. Sales Agent (Prioridade Média)
+Objetivo: Auxiliar em upgrades, downgrades e vendas
+
+Tarefas:
+
+ Criar src/agents/sales_agent.py
+ Implementar tools:
+get_customer_profile(cliente_id) → perfil do cliente
+get_plan_recommendations(usage_data) → sugerir planos
+calculate_upgrade_cost(current_plan, new_plan) → calcular custo
+ Definir abordagem consultiva (não agressiva)
+ Integrar com CRM (se disponível)
+ Criar testes unitários
+Estimativa: 3 dias
+
+4. General Agent (Prioridade Baixa)
+Objetivo: Lidar com interações gerais e FAQ
+
+Tarefas:
+
+ Criar src/agents/general_agent.py
+ Implementar tools:
+search_faq(query) → buscar em FAQ
+get_company_info(topic) → informações institucionais
+ Popular FAQ com perguntas comuns
+ Criar testes unitários
+Estimativa: 2 dias
+
+🔧 Fase 3: Integração e Orquestração (1 semana)
+1. Agent Orchestrator
+Objetivo: Coordenar múltiplos agentes em uma conversa
+
+Tarefas:
+
+ Criar src/agents/orchestrator.py
+ Implementar lógica de roteamento dinâmico
+ Gerenciar contexto entre agentes
+ Implementar handoff entre agentes
+ Adicionar logging e observabilidade
+2. Memory Management
+Objetivo: Implementar memória de curto e longo prazo
+
+Tarefas:
+
+ Criar src/memory/session_manager.py (Redis)
+ Criar src/memory/conversation_store.py (PostgreSQL)
+ Implementar embedding e storage de conversas
+ Criar função de similarity search
+ Implementar TTL e cleanup automático
+3. API Integration
+Objetivo: Expor agentes via API REST
+
+Tarefas:
+
+ Criar endpoint /api/agents/chat
+ Implementar streaming de respostas (SSE)
+ Adicionar rate limiting
+ Implementar autenticação por cliente
+ Documentar API no Swagger
+📊 Fase 4: Monitoramento e Otimização (1 semana)
+1. Observabilidade
+Tarefas:
+
+ Configurar Application Insights dashboards
+ Implementar custom metrics:
+Taxa de resolução por agente
+Latência média
+Custo por conversa
+CSAT por agente
+ Configurar alertas críticos
+ Criar runbook de operação
+2. Otimização de Custos
+Tarefas:
+
+ Implementar cache de respostas frequentes (Redis)
+ Otimizar prompts (reduzir tokens)
+ Implementar batch processing para embeddings
+ Configurar rate limiting inteligente
+3. Testes de Carga
+Tarefas:
+
+ Criar testes de carga com Locust/k6
+ Simular 1000 req/min
+ Identificar gargalos
+ Otimizar performance
+🎯 Fase 5: Produção (1 semana)
+1. Rollout Gradual
+Tarefas:
+
+ Deploy em staging
+ Testes com usuários beta (10%)
+ Coletar feedback
+ Ajustar prompts e comportamento
+ Aumentar para 25%, 50%, 100%
+2. Documentação Final
+Tarefas:
+
+ Atualizar README com guia completo
+ Criar documentação de API
+ Criar guia de troubleshooting
+ Documentar runbook de operação
+📅 Timeline Estimado
+Fase	Duração	Prazo
+Fase 2: Agentes Especializados	2-3 semanas	Semana 1-3
+Fase 3: Integração	1 semana	Semana 4
+Fase 4: Monitoramento	1 semana	Semana 5
+Fase 5: Produção	1 semana	Semana 6
+Total: ~6 semanas para MVP completo em produção
+
+🎓 Próxima Ação Imediata
+Começar com Financial Agent:
+
+# 1. Criar arquivo do agente
+touch src/agents/financial_agent.py
+# 2. Implementar estrutura básica
+# 3. Testar com casos simples
+# 4. Integrar com Router Agent
+Comando para iniciar:
+
+# Exemplo de estrutura inicial
+class FinancialAgent:
+    def __init__(self):
+        self.kernel = Kernel()
+        # ... configuração
+    
+    async def handle(self, message: str, context: dict) -> dict:
+        # Lógica do agente
+        pass
+💡 Dicas de Implementação
+Comece simples: Implemente um agente por vez
+Teste constantemente: Use pytest após cada feature
+Monitore custos: Acompanhe gastos no Azure Portal
+Itere nos prompts: Ajuste baseado em feedback real
+Documente decisões: Mantenha um log de design decisions

@@ -30,3 +30,7 @@ pydantic<2.10
 # Testing
 pytest
 pytest-asyncio
+
+# Observability
+azure-monitor-opentelemetry
+opentelemetry-instrumentation-fastapi

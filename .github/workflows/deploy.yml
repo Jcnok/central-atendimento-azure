@@ -7,7 +7,7 @@ on:
 
 env:
   AZURE_WEBAPP_NAME: app-central-atendimento-19055 # Nome do seu App Service
-  PYTHON_VERSION: '3.10' # Versão do Python usada no seu projeto
+  PYTHON_VERSION: '3.12' # Versão do Python usada no seu projeto
 
 jobs:
   build-and-deploy:

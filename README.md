@@ -3,7 +3,7 @@
 <div align="center">
 
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.121.2-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![React](https://img.shields.io/badge/React-19.2.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Azure App Service](https://img.shields.io/badge/Azure_App_Service-Deployed-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)
@@ -123,7 +123,7 @@ graph TD
 ## 🛠 Stack Tecnológica
 
 ### Backend (O Motor)
-*   **Python 3.10+**: A linguagem da IA e da produtividade.
+*   **Python 3.12+**: A linguagem da IA e da produtividade.
 *   **FastAPI 0.121.2**: Framework moderno, rápido e assíncrono.
 *   **SQLAlchemy (AsyncIO)**: ORM poderoso para interações não-bloqueantes com o banco.
 *   **Pydantic**: Validação de dados robusta e tipada.
@@ -225,7 +225,7 @@ O container é *stateless* e pronto para orquestração. Basta criar os manifest
 
 *   [x] **Fase 1: MVP** - Backend Async, Frontend Básico, Dockerização.
 *   [x] **Fase 2: Refatoração** - Migração total para AsyncIO, Melhorias de UX.
-*   [ ] **Fase 3: Inteligência Real** - Integração com Azure OpenAI (GPT-4) para respostas generativas.
+*   [x] **Fase 3: Inteligência Real** - Integração com Azure OpenAI (GPT-4) para respostas generativas.
 *   [ ] **Fase 4: Omnichannel** - Integração oficial com WhatsApp Business API.
 *   [ ] **Fase 5: Analytics Avançado** - Dashboards PowerBI em tempo real.
 
