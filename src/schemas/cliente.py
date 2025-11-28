@@ -12,6 +12,14 @@ class ClienteCreate(BaseModel):
     canal_preferido: str = "site"
 
 
+class ClienteUpdate(BaseModel):
+    nome: Optional[str] = None
+    email: Optional[EmailStr] = None
+    telefone: Optional[str] = None
+    endereco: Optional[str] = None
+    canal_preferido: Optional[str] = None
+
+
 class ClienteResponse(BaseModel):
     id: int
     nome: str

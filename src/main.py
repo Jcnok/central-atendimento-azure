@@ -20,6 +20,8 @@ from src.routes.boletos import router as boletos_router
 from src.routes.chat import router as chat_router
 from src.routes.dashboard import router as dashboard_router
 from src.routes.planos import router as planos_router
+from src.routes.financeiro import router as financeiro_router
+from src.routes.comercial import router as comercial_router
 
 # ==================== CONFIGURAÇÃO DE LOGGING ====================
 logging.basicConfig(level=logging.INFO)
@@ -123,6 +125,8 @@ app.include_router(boletos_router, prefix="/api")
 app.include_router(chat_router, prefix="/api")
 app.include_router(dashboard_router, prefix="/api")
 app.include_router(planos_router, prefix="/api")
+app.include_router(financeiro_router, prefix="/api")
+app.include_router(comercial_router, prefix="/api")
 
 
 # ==================== STATIC FILES (FRONTEND) ====================

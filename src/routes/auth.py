@@ -53,13 +53,12 @@ async def login(
     }
 
 @router.post("/login/client")
-async def login_client(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
-):
+async def login_client(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
     """
-    Login for Clients using Email as username.
+    Realiza o login de um cliente e retorna um token JWT.
     """
     from src.models.cliente import Cliente
+    from src.utils.security import verify_password
     
     # Check if client exists by email
     result = await db.execute(select(Cliente).filter(Cliente.email == form_data.username))

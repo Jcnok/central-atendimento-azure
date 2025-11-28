@@ -15,6 +15,12 @@ export default function Home() {
 
     useEffect(() => {
         fetchPlanos();
+        // Generate or retrieve session ID
+        let sessionId = localStorage.getItem('chat_session_id');
+        if (!sessionId) {
+            sessionId = crypto.randomUUID();
+            localStorage.setItem('chat_session_id', sessionId);
+        }
     }, []);
 
     const fetchPlanos = async () => {
@@ -39,12 +45,14 @@ export default function Home() {
         setLoadingChat(true);
 
         try {
-            // Use public endpoint if available or standard chat endpoint without auth?
-            // Since we implemented optional auth in /api/chat, we can use it.
+            const sessionId = localStorage.getItem('chat_session_id');
             const response = await fetch('/api/chat/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: userMsg })
+                body: JSON.stringify({
+                    message: userMsg,
+                    session_id: sessionId
+                })
             });
 
             const data = await response.json();
