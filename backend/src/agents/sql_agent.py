@@ -19,7 +19,13 @@ class SQLAgent:
         # Configuração do banco de dados para LangChain
         # O LangChain precisa da URL de conexão síncrona (psycopg2)
         # Convertemos a URL async (postgresql+asyncpg) para sync (postgresql) se necessário
+        # E garantimos que sslmode=require esteja presente para Azure PostgreSQL
         db_url = str(settings.DATABASE_URL).replace("postgresql+asyncpg://", "postgresql://")
+        if "sslmode" not in db_url:
+             if "?" in db_url:
+                 db_url += "&sslmode=require"
+             else:
+                 db_url += "?sslmode=require"
         
         self.db = SQLDatabase.from_uri(db_url)
         
@@ -55,7 +61,8 @@ class SQLAgent:
             logger.info("✅ Agente SQL inicializado com sucesso.")
         except Exception as e:
             logger.error(f"❌ Erro ao inicializar Agente SQL: {str(e)}")
-            raise
+            # Fallback ou re-raise dependendo da estratégia. Aqui vamos re-raise para alertar.
+            raise e
 
     async def process_query(self, query: str) -> str:
         """
