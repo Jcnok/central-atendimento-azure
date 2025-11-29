@@ -3,15 +3,17 @@ version: '3.8'
 services:
   # Serviço da API FastAPI
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: central_atendimento_api
     command: gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.main:app --bind 0.0.0.0:8000
     ports:
       - "8000:8000"
     volumes:
-      - ./src:/app/src # Monta o código-fonte para live-reloading (opcional, bom para dev)
+      - ./backend/src:/app/src # Monta o código-fonte para live-reloading (opcional, bom para dev)
     env_file:
-      - .env # Carrega as variáveis de ambiente do arquivo .env
+      - ./backend/.env # Carrega as variáveis de ambiente do arquivo .env
     depends_on:
       db:
         condition: service_healthy # Espera o banco de dados estar saudável antes de iniciar a API

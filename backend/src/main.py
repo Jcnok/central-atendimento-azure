@@ -22,6 +22,7 @@ from src.routes.dashboard import router as dashboard_router
 from src.routes.planos import router as planos_router
 from src.routes.financeiro import router as financeiro_router
 from src.routes.comercial import router as comercial_router
+from src.routes.agent import router as agent_router
 
 # ==================== CONFIGURAÇÃO DE LOGGING ====================
 logging.basicConfig(level=logging.INFO)
@@ -127,6 +128,7 @@ app.include_router(dashboard_router, prefix="/api")
 app.include_router(planos_router, prefix="/api")
 app.include_router(financeiro_router, prefix="/api")
 app.include_router(comercial_router, prefix="/api")
+app.include_router(agent_router, prefix="/api")
 
 
 # ==================== STATIC FILES (FRONTEND) ====================
@@ -136,8 +138,12 @@ from fastapi.responses import FileResponse
 
 # Mount assets folder (JS, CSS, Images)
 # Verifica se a pasta existe para evitar erros em dev local sem build
-if os.path.exists("frontend/dist/assets"):
-    app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
+frontend_dist = "frontend/dist"
+if not os.path.exists(frontend_dist) and os.path.exists("../frontend/dist"):
+    frontend_dist = "../frontend/dist"
+
+if os.path.exists(f"{frontend_dist}/assets"):
+    app.mount("/assets", StaticFiles(directory=f"{frontend_dist}/assets"), name="assets")
 
 # Catch-all route for SPA (React Router)
 # Deve ser a ÚLTIMA rota definida para não conflitar com a API
@@ -149,8 +155,9 @@ async def serve_frontend(full_path: str):
 
     # Para qualquer outra rota, serve o index.html do React
     # O React Router vai lidar com a rota no lado do cliente
-    if os.path.exists("frontend/dist/index.html"):
-        return FileResponse("frontend/dist/index.html")
+    index_path = f"{frontend_dist}/index.html"
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
     
     return {"message": "Frontend não encontrado. Execute 'npm run build' na pasta frontend."}
 

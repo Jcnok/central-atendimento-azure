@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './Home.module.css';
 
@@ -138,7 +139,7 @@ export default function Home() {
                         <div className={styles.chatWidgetMessages}>
                             {chatMessages.map((msg, idx) => (
                                 <div key={idx} className={`${styles.chatMsg} ${msg.type === 'user' ? styles.userMsg : styles.botMsg}`}>
-                                    {msg.text}
+                                    {msg.type === 'bot' ? <ReactMarkdown>{msg.text}</ReactMarkdown> : msg.text}
                                 </div>
                             ))}
                             {loadingChat && <div className={styles.loading}>Digitando...</div>}

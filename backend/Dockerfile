@@ -29,7 +29,7 @@ WORKDIR /app
 # RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements
-COPY requirements.txt .
+COPY backend/requirements.txt .
 
 # Create virtual environment and install dependencies
 RUN python -m venv /opt/venv && \
@@ -37,7 +37,7 @@ RUN python -m venv /opt/venv && \
     /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 
 # Copy backend source code
-COPY src/ ./src/
+COPY backend/src/ ./src/
 
 # Copy built frontend assets from previous stage
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist

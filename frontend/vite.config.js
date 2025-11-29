@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://app-central-atendimento-19055.azurewebsites.net',
+        target: 'http://localhost:8000',
         changeOrigin: true,
       },
     },

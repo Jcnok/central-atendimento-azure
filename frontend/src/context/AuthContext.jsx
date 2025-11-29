@@ -10,10 +10,16 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         if (token) {
-            // Decode token or fetch user profile if needed
-            // For now, we just assume the user is logged in if a token exists
             const username = localStorage.getItem('username');
-            setUser({ username });
+            const role = localStorage.getItem('role');
+
+            // If role is missing (legacy session), force logout to fix state
+            if (!role) {
+                logout();
+                return;
+            }
+
+            setUser({ username, role });
         }
     }, [token]);
 
@@ -76,15 +82,30 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const setAuthToken = (accessToken, userData = {}) => {
+        localStorage.setItem('token', accessToken);
+        setToken(accessToken);
+
+        // Set user data from provided userData or extract from localStorage
+        const username = userData.username || localStorage.getItem('user_name') || 'User';
+        const role = userData.role || 'admin';
+
+        localStorage.setItem('username', username);
+        localStorage.setItem('role', role);
+        setUser({ username, role });
+    };
+
     const logout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('username');
+        localStorage.removeItem('user_name');
+        localStorage.removeItem('role');
         setToken(null);
         setUser(null);
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, signup, logout, loading, error }}>
+        <AuthContext.Provider value={{ user, token, login, signup, logout, setAuthToken, loading, error }}>
             {children}
         </AuthContext.Provider>
     );

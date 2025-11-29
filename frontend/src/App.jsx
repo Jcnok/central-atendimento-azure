@@ -35,12 +35,14 @@ function AppRoutes() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
-        <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
+        <Route path="/login" element={
+          !user ? <Login /> : (user.role === 'client' ? <Navigate to="/support" /> : <Navigate to="/dashboard" />)
+        } />
         <Route path="/signup" element={<Signup />} />
 
         {/* Client Routes */}
         <Route path="/support" element={
-          <Support />
+          user && user.role === 'client' ? <Support /> : <Navigate to="/login" />
         } />
 
         {/* Admin Routes */}

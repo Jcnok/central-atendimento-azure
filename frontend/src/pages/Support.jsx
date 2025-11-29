@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 import styles from './Support.module.css';
 
 export default function Support() {
     const { user, token, logout } = useAuth();
-    // Get user name from localStorage (saved during login) or fallback to email
+    const navigate = useNavigate();
     const userName = localStorage.getItem('user_name') || user?.sub?.split('@')[0] || 'Cliente';
 
     const [messages, setMessages] = useState([
@@ -13,24 +15,70 @@ export default function Support() {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [sessionId] = useState(() => 'session-' + Math.random().toString(36).substr(2, 9));
+
     const [contracts, setContracts] = useState([]);
+    const [invoices, setInvoices] = useState([]);
+    const [tickets, setTickets] = useState([]);
+
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
-        fetchContracts();
+        fetchDashboardData();
     }, []);
 
-    const fetchContracts = async () => {
+    const fetchDashboardData = async () => {
         try {
-            const response = await fetch('/api/clientes/me/contratos', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const headers = { 'Authorization': `Bearer ${token}` };
+            console.log("Fetching dashboard summary...");
+
+            const response = await fetch('/api/clientes/me/resumo', { headers });
+
+            if (response.status === 401) {
+                console.warn("Session expired or unauthorized. Redirecting to login.");
+                logout();
+                navigate('/login');
+                return;
+            }
+
             if (response.ok) {
                 const data = await response.json();
-                setContracts(data);
+                console.log("Summary Data:", data);
+
+                // Map Plan to Contracts format
+                if (data.plano_ativo) {
+                    setContracts([{
+                        id: data.plano_ativo.plano_id,
+                        plan: data.plano_ativo.nome,
+                        velocidade: data.plano_ativo.velocidade,
+                        preco: data.plano_ativo.preco,
+                        status: 'ativo'
+                    }]);
+                } else {
+                    setContracts([]);
+                }
+
+                // Map Invoices
+                if (data.faturas_pendentes) {
+                    setInvoices(data.faturas_pendentes.map(f => ({
+                        id: f.fatura_id,
+                        valor: f.valor,
+                        vencimento: f.data_vencimento,
+                        status: f.status
+                    })));
+                }
+
+                // Map Tickets
+                if (data.ultimos_chamados) {
+                    setTickets(data.ultimos_chamados.map(t => ({
+                        id: t.id,
+                        assunto: t.mensagem ? (t.mensagem.substring(0, 30) + '...') : 'Sem assunto',
+                        status: t.status,
+                        data: t.data_criacao
+                    })));
+                }
             }
         } catch (error) {
-            console.error("Erro ao buscar contratos:", error);
+            console.error("Erro ao buscar dados do dashboard:", error);
         }
     };
 
@@ -75,6 +123,16 @@ export default function Support() {
                 text: data.response
             }]);
 
+            // Check for success keywords to trigger data refresh
+            const lowerResponse = data.response.toLowerCase();
+            if (lowerResponse.includes('sucesso') ||
+                lowerResponse.includes('atualizado') ||
+                lowerResponse.includes('realizado') ||
+                lowerResponse.includes('protocolo')) {
+                console.log("Action detected, refreshing dashboard data...");
+                fetchDashboardData();
+            }
+
         } catch (err) {
             console.error(err);
             setMessages(prev => [...prev, { type: 'bot', text: 'Desculpe, tive um problema técnico. Tente novamente em instantes.' }]);
@@ -91,10 +149,14 @@ export default function Support() {
     };
 
     const submitNPS = () => {
-        // In a real app, send to backend
         alert(`Obrigado pela avaliação: ${npsScore}`);
         setShowNPS(false);
-        setMessages(prev => [...prev, { type: 'bot', text: 'Atendimento finalizado. Obrigado!' }]);
+        navigate('/'); // Redirect to Home after finishing
+    };
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
     };
 
     return (
@@ -111,31 +173,64 @@ export default function Support() {
                     </div>
                 </div>
 
-                <nav className={styles.nav}>
-                    <h3>Meus Serviços</h3>
-                    <ul>
-                        {contracts.length > 0 ? contracts.map(c => (
-                            <li key={c.id} className={styles.navItem}>
-                                <span className={`${styles.statusDot} ${styles[c.status]}`}></span>
-                                <div>
-                                    <div className={styles.planName}>{c.plan}</div>
+                <div className={styles.sidebarContent}>
+                    {/* Card: Meus Serviços */}
+                    <div className={styles.card}>
+                        <h3>Meus Serviços</h3>
+                        <div className={styles.cardList}>
+                            {contracts.length > 0 ? contracts.map(c => (
+                                <div key={c.id} className={styles.cardItem}>
+                                    <div className={styles.cardHeader}>
+                                        <span className={styles.planName}>{c.plan}</span>
+                                        <span className={`${styles.statusDot} ${styles[c.status]}`}></span>
+                                    </div>
                                     <div className={styles.planDetail}>{c.velocidade} - R$ {c.preco}</div>
                                 </div>
-                            </li>
-                        )) : (
-                            <li className={styles.navItem}>Nenhum serviço ativo</li>
-                        )}
-                    </ul>
+                            )) : (
+                                <div className={styles.emptyState}>Nenhum serviço ativo</div>
+                            )}
+                        </div>
+                    </div>
 
-                    <h3>Atalhos</h3>
-                    <ul>
-                        <li>📄 Segunda via de Fatura</li>
-                        <li>🔧 Suporte Técnico</li>
-                        <li>💳 Alterar Forma de Pagamento</li>
-                    </ul>
-                </nav>
+                    {/* Card: Faturas */}
+                    <div className={styles.card}>
+                        <h3>Faturas em Aberto</h3>
+                        <div className={styles.cardList}>
+                            {invoices.filter(i => i.status === 'pendente').length > 0 ?
+                                invoices.filter(i => i.status === 'pendente').map(f => (
+                                    <div key={f.id} className={styles.cardItem}>
+                                        <div className={styles.cardHeader}>
+                                            <span className={styles.invoiceIcon}>📄</span>
+                                            <span className={styles.planName}>Vence {f.vencimento}</span>
+                                        </div>
+                                        <div className={styles.planDetail}>R$ {f.valor.toFixed(2)}</div>
+                                    </div>
+                                )) : (
+                                    <div className={styles.emptyState}>Nenhuma fatura pendente</div>
+                                )}
+                        </div>
+                    </div>
 
-                <button onClick={logout} className={styles.logoutButton}>Sair</button>
+                    {/* Card: Chamados */}
+                    <div className={styles.card}>
+                        <h3>Últimos Chamados</h3>
+                        <div className={styles.cardList}>
+                            {tickets.length > 0 ? tickets.map(t => (
+                                <div key={t.id} className={styles.cardItem}>
+                                    <div className={styles.cardHeader}>
+                                        <span className={styles.planName}>{t.assunto}</span>
+                                        <span className={`${styles.statusDot} ${t.status === 'aberto' ? styles.pendente : styles.pago}`}></span>
+                                    </div>
+                                    <div className={styles.planDetail}>{t.data} - {t.status}</div>
+                                </div>
+                            )) : (
+                                <div className={styles.emptyState}>Nenhum chamado recente</div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                <button onClick={handleLogout} className={styles.logoutButton}>Sair</button>
             </aside>
 
             {/* Main Chat Area */}
@@ -145,8 +240,6 @@ export default function Support() {
                         <h2>Atendimento Virtual</h2>
                         <div className={styles.platformFlags}>
                             <span className={styles.flag} title="Você está no Site">🌐 Site</span>
-                            {/* Mock flags for other channels */}
-                            {/* <span className={styles.flag}>📱 WhatsApp</span> */}
                         </div>
                     </div>
                     <button onClick={handleFinish} className={styles.finishButton}>Finalizar Atendimento</button>
@@ -156,7 +249,11 @@ export default function Support() {
                     {messages.map((msg, idx) => (
                         <div key={idx} className={`${styles.messageRow} ${msg.type === 'user' ? styles.userRow : styles.botRow}`}>
                             <div className={`${styles.message} ${msg.type === 'user' ? styles.userMessage : styles.botMessage}`}>
-                                {msg.text}
+                                {msg.type === 'bot' ? (
+                                    <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                ) : (
+                                    msg.text
+                                )}
                             </div>
                         </div>
                     ))}

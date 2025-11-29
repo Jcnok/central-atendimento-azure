@@ -7,7 +7,7 @@ export default function Layout({ children }) {
     const navigate = useNavigate();
 
     const menuItems = [
-        { path: '/', label: 'Dashboard', icon: '📊' },
+        { path: '/dashboard', label: 'Dashboard', icon: '📊' },
         { path: '/tickets', label: 'Chamados', icon: '🎫' },
         { path: '/clients', label: 'Clientes', icon: '👥' },
         { path: '/agent', label: 'Agente IA', icon: '🤖' },

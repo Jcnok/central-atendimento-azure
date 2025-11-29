@@ -9,7 +9,7 @@ export default function Login() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const { login } = useAuth();
+    const { setAuthToken } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -39,15 +39,21 @@ export default function Login() {
             }
 
             const data = await response.json();
-            login(data.access_token);
 
             // Save user name for display
             if (data.user_name) {
                 localStorage.setItem('user_name', data.user_name);
             }
 
+            // Set authentication token and user data
+            const role = activeTab === 'client' ? 'client' : 'admin';
+            setAuthToken(data.access_token, {
+                username: data.user_name || email,
+                role: role
+            });
+
             // Redirect based on role
-            if (activeTab === 'client') {
+            if (role === 'client') {
                 navigate('/support');
             } else {
                 navigate('/dashboard');

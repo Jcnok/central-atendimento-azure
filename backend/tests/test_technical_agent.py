@@ -6,35 +6,52 @@ from src.services.technical_service import TechnicalService
 
 # ================== PLUGIN TESTS ==================
 
-def test_technical_plugin_search_kb():
+# ================== PLUGIN TESTS ==================
+
+@pytest.mark.asyncio
+async def test_technical_plugin_search_kb():
     plugin = TechnicalPlugin()
-    with patch.object(TechnicalService, 'search_knowledge_base') as mock_method:
+    with patch.object(TechnicalService, 'search_knowledge_base', new_callable=AsyncMock) as mock_method:
         mock_method.return_value = [{"topic": "internet", "content": "Reinicie o modem"}]
-        result = plugin.search_knowledge_base("internet lenta")
+        result = await plugin.search_knowledge_base("internet lenta")
         assert "Reinicie o modem" in result
         mock_method.assert_called_with("internet lenta")
 
-def test_technical_plugin_search_kb_empty():
+@pytest.mark.asyncio
+async def test_technical_plugin_search_kb_empty():
     plugin = TechnicalPlugin()
-    with patch.object(TechnicalService, 'search_knowledge_base') as mock_method:
+    with patch.object(TechnicalService, 'search_knowledge_base', new_callable=AsyncMock) as mock_method:
         mock_method.return_value = []
-        result = plugin.search_knowledge_base("assunto desconhecido")
+        result = await plugin.search_knowledge_base("assunto desconhecido")
         assert "Não encontrei informações" in result
 
-def test_technical_plugin_create_ticket():
+@pytest.mark.asyncio
+async def test_technical_plugin_create_ticket():
     plugin = TechnicalPlugin()
-    with patch.object(TechnicalService, 'create_ticket') as mock_method:
+    plugin.set_context(1)
+    with patch.object(TechnicalService, 'create_ticket', new_callable=AsyncMock) as mock_method:
         mock_method.return_value = {"ticket_id": "TKT-123"}
-        result = plugin.create_ticket("Sem internet", "alta")
+        result = await plugin.create_ticket("Sem internet", "alta")
         assert "TKT-123" in result
-        mock_method.assert_called_with("Sem internet", "alta")
+        mock_method.assert_called_with("Sem internet", "alta", 1)
 
-def test_technical_plugin_check_status():
+@pytest.mark.asyncio
+async def test_technical_plugin_check_status():
     plugin = TechnicalPlugin()
-    with patch.object(TechnicalService, 'check_system_status') as mock_method:
+    with patch.object(TechnicalService, 'check_system_status', new_callable=AsyncMock) as mock_method:
         mock_method.return_value = {"internet": "ok"}
-        result = plugin.check_system_status()
+        result = await plugin.check_system_status()
         assert '"internet": "ok"' in result
+
+@pytest.mark.asyncio
+async def test_technical_plugin_identify_client():
+    plugin = TechnicalPlugin()
+    with patch.object(TechnicalService, 'get_client_by_email', new_callable=AsyncMock) as mock_method:
+        mock_method.return_value = 123
+        result = await plugin.identify_client("test@example.com")
+        assert "123" in result
+        assert plugin.current_client_id == 123
+        mock_method.assert_called_with("test@example.com")
 
 # ================== AGENT TESTS ==================
 

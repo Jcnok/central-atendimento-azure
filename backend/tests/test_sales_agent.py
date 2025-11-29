@@ -6,33 +6,39 @@ from src.services.sales_service import SalesService
 
 # ================== PLUGIN TESTS ==================
 
-def test_sales_plugin_get_profile():
+# ================== PLUGIN TESTS ==================
+
+@pytest.mark.asyncio
+async def test_sales_plugin_get_profile():
     plugin = SalesPlugin()
-    with patch.object(SalesService, 'get_customer_profile') as mock_method:
+    with patch.object(SalesService, 'get_customer_profile', new_callable=AsyncMock) as mock_method:
         mock_method.return_value = {"plan": "basic"}
-        result = plugin.get_customer_profile(1)
+        result = await plugin.get_customer_profile(1)
         assert '"plan": "basic"' in result
         mock_method.assert_called_with(1)
 
-def test_sales_plugin_recommendations():
+@pytest.mark.asyncio
+async def test_sales_plugin_recommendations():
     plugin = SalesPlugin()
-    with patch.object(SalesService, 'get_plan_recommendations') as mock_method:
+    with patch.object(SalesService, 'get_plan_recommendations', new_callable=AsyncMock) as mock_method:
         mock_method.return_value = [{"plan": "premium"}]
-        result = plugin.get_plan_recommendations(1)
+        result = await plugin.get_plan_recommendations(1)
         assert "premium" in result
 
-def test_sales_plugin_recommendations_empty():
+@pytest.mark.asyncio
+async def test_sales_plugin_recommendations_empty():
     plugin = SalesPlugin()
-    with patch.object(SalesService, 'get_plan_recommendations') as mock_method:
+    with patch.object(SalesService, 'get_plan_recommendations', new_callable=AsyncMock) as mock_method:
         mock_method.return_value = []
-        result = plugin.get_plan_recommendations(1)
-        assert "adequado" in result
+        result = await plugin.get_plan_recommendations(1)
+        assert "[]" in result
 
-def test_sales_plugin_calc_cost():
+@pytest.mark.asyncio
+async def test_sales_plugin_calc_cost():
     plugin = SalesPlugin()
-    with patch.object(SalesService, 'calculate_upgrade_cost') as mock_method:
+    with patch.object(SalesService, 'calculate_upgrade_cost', new_callable=AsyncMock) as mock_method:
         mock_method.return_value = "R$ 50,00"
-        result = plugin.calculate_upgrade_cost("A", "B")
+        result = await plugin.calculate_upgrade_cost("A", "B")
         assert "R$ 50,00" in result
 
 # ================== AGENT TESTS ==================

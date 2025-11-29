@@ -6,7 +6,7 @@ from sqlalchemy import select
 from src.config.database import get_db
 from src.models.cliente import Cliente
 from src.schemas.cliente import ClienteCreate, ClienteResponse, ClienteUpdate
-from src.utils.security import get_current_user
+from src.utils.security import get_current_user, get_current_client
 
 router = APIRouter(prefix="/clientes", tags=["Clientes"])
 
@@ -86,22 +86,10 @@ async def listar_clientes(skip: int = 0, limit: int = 10, db: AsyncSession = Dep
 )
 async def listar_meus_contratos(
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_client: Cliente = Depends(get_current_client)
 ):
     """Lista os contratos do cliente autenticado"""
     
-    if current_user.get("role") != "client":
-         # If admin, return empty list or error. 
-         return []
-
-    result = await db.execute(select(Cliente).filter(Cliente.email == current_user["sub"]))
-    cliente = result.scalars().first()
-    
-    if not cliente:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado para este usuário"
-        )
-        
     # Fetch contracts with Plan details
     from src.models.contrato import Contrato
     from src.models.plano import Plano
@@ -110,7 +98,7 @@ async def listar_meus_contratos(
     query = (
         select(Contrato)
         .options(selectinload(Contrato.plano))
-        .filter(Contrato.cliente_id == cliente.id)
+        .filter(Contrato.cliente_id == current_client.id)
     )
     
     result = await db.execute(query)
@@ -126,6 +114,69 @@ async def listar_meus_contratos(
             "preco": c.plano.preco
         }
         for c in contratos
+    ]
+
+@router.get(
+    "/me/faturas",
+    dependencies=[Depends(get_current_user)],
+)
+async def listar_minhas_faturas(
+    db: AsyncSession = Depends(get_db),
+    current_client: Cliente = Depends(get_current_client)
+):
+    """Lista as faturas do cliente autenticado"""
+    
+    from src.models.fatura import Fatura
+    from src.models.contrato import Contrato
+    
+    result = await db.execute(
+        select(Fatura)
+        .join(Contrato)
+        .filter(Contrato.cliente_id == current_client.id)
+        .order_by(Fatura.data_vencimento.desc())
+        .limit(5)
+    )
+    faturas = result.scalars().all()
+    
+    return [
+        {
+            "id": f.fatura_id,
+            "valor": float(f.valor),
+            "vencimento": f.data_vencimento.strftime("%d/%m/%Y"),
+            "status": f.status
+        }
+        for f in faturas
+    ]
+
+@router.get(
+    "/me/chamados",
+    dependencies=[Depends(get_current_user)],
+)
+async def listar_meus_chamados(
+    db: AsyncSession = Depends(get_db),
+    current_client: Cliente = Depends(get_current_client)
+):
+    """Lista os chamados do cliente autenticado"""
+    
+    from src.models.chamado import Chamado
+    
+    result = await db.execute(
+        select(Chamado)
+        .filter(Chamado.cliente_id == current_client.id)
+        .order_by(Chamado.data_criacao.desc())
+        .limit(5)
+    )
+    chamados = result.scalars().all()
+    
+    return [
+        {
+            "id": c.id,
+            "protocolo": c.protocolo,
+            "assunto": c.mensagem[:30] + "..." if len(c.mensagem) > 30 else c.mensagem,
+            "status": c.status,
+            "data": c.data_criacao.strftime("%d/%m/%Y")
+        }
+        for c in chamados
     ]
 
 @router.put("/{cliente_id}", response_model=ClienteResponse)
@@ -204,7 +255,7 @@ async def listar_chamados_cliente(
     """Lista todos os chamados de um cliente específico."""
     from src.models.chamado import Chamado
     result = await db.execute(
-        select(Chamado).filter(Chamado.cliente_id == cliente_id).order_by(Chamado.data_abertura.desc())
+        select(Chamado).filter(Chamado.cliente_id == cliente_id).order_by(Chamado.data_criacao.desc())
     )
     return result.scalars().all()
 
@@ -230,41 +281,52 @@ async def obter_plano_cliente(
         raise HTTPException(status_code=404, detail="Nenhum plano ativo encontrado")
     return contrato.plano
 
-@router.get("/{cliente_id}/resumo")
-async def obter_resumo_cliente(
-    cliente_id: int, 
+@router.get("/me/resumo")
+async def obter_meu_resumo(
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_client: Cliente = Depends(get_current_client)
 ):
-    """Retorna um resumo dos dados do cliente."""
-    # Get Client
-    result = await db.execute(select(Cliente).filter(Cliente.id == cliente_id))
-    cliente = result.scalars().first()
-    if not cliente:
-        raise HTTPException(status_code=404, detail="Cliente não encontrado")
-        
-    # Get Last 5 Tickets
-    from src.models.chamado import Chamado
-    chamados_result = await db.execute(
-        select(Chamado).filter(Chamado.cliente_id == cliente_id).order_by(Chamado.data_abertura.desc()).limit(5)
-    )
-    chamados = chamados_result.scalars().all()
+    """Retorna um resumo completo dos dados do cliente autenticado."""
     
-    # Get Active Plan
+    # 1. Get Active Plan
     from src.models.contrato import Contrato
     from sqlalchemy.orm import selectinload
     contrato_result = await db.execute(
         select(Contrato)
         .options(selectinload(Contrato.plano))
-        .filter(Contrato.cliente_id == cliente_id, Contrato.status == 'ativo')
+        .filter(Contrato.cliente_id == current_client.id, Contrato.status == 'ativo')
         .order_by(Contrato.data_inicio.desc())
     )
     contrato = contrato_result.scalars().first()
     
+    # 2. Get Last 5 Tickets
+    from src.models.chamado import Chamado
+    chamados_result = await db.execute(
+        select(Chamado)
+        .filter(Chamado.cliente_id == current_client.id)
+        .order_by(Chamado.data_criacao.desc())
+        .limit(5)
+    )
+    chamados = chamados_result.scalars().all()
+
+    # 3. Get Pending Invoices
+    from src.models.fatura import Fatura
+    from src.models.contrato import Contrato
+    
+    faturas_result = await db.execute(
+        select(Fatura)
+        .join(Contrato)
+        .filter(Contrato.cliente_id == current_client.id, Fatura.status == 'pendente')
+        .order_by(Fatura.data_vencimento.asc())
+        .limit(3)
+    )
+    faturas = faturas_result.scalars().all()
+    
     return {
-        "cliente": cliente,
+        "cliente": current_client,
         "plano_ativo": contrato.plano if contrato else None,
-        "ultimos_chamados": chamados
+        "ultimos_chamados": chamados,
+        "faturas_pendentes": faturas
     }
 
 

@@ -6,9 +6,6 @@ export default function Dashboard() {
     const { token, logout } = useAuth();
     const [kpis, setKpis] = useState(null);
     const [tickets, setTickets] = useState([]);
-    const [agentQuery, setAgentQuery] = useState('');
-    const [agentResponse, setAgentResponse] = useState('');
-    const [loadingAgent, setLoadingAgent] = useState(false);
 
     useEffect(() => {
         fetchDashboardData();
@@ -27,32 +24,6 @@ export default function Dashboard() {
             setTickets(ticketData);
         } catch (error) {
             console.error("Error fetching dashboard data:", error);
-        }
-    };
-
-    const handleAgentSubmit = async (e) => {
-        e.preventDefault();
-        if (!agentQuery.trim()) return;
-
-        setLoadingAgent(true);
-        setAgentResponse('');
-
-        try {
-            const response = await fetch('/api/dashboard/agent', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ query: agentQuery })
-            });
-
-            const data = await response.json();
-            setAgentResponse(data.response);
-        } catch (error) {
-            setAgentResponse("Erro ao consultar o agente. Tente novamente.");
-        } finally {
-            setLoadingAgent(false);
         }
     };
 
@@ -107,31 +78,6 @@ export default function Dashboard() {
                             ))}
                         </tbody>
                     </table>
-                </section>
-
-                {/* CRM Agent */}
-                <section className={styles.agentSection}>
-                    <h2>🤖 Agente CRM (SQL)</h2>
-                    <p>Pergunte sobre dados da base (ex: "Quantos clientes cancelaram este mês?", "Liste clientes com faturas atrasadas")</p>
-
-                    <form onSubmit={handleAgentSubmit} className={styles.agentForm}>
-                        <textarea
-                            value={agentQuery}
-                            onChange={(e) => setAgentQuery(e.target.value)}
-                            placeholder="Digite sua pergunta..."
-                            rows="3"
-                        />
-                        <button type="submit" disabled={loadingAgent}>
-                            {loadingAgent ? 'Consultando...' : 'Perguntar'}
-                        </button>
-                    </form>
-
-                    {agentResponse && (
-                        <div className={styles.agentResult}>
-                            <strong>Resposta:</strong>
-                            <p>{agentResponse}</p>
-                        </div>
-                    )}
                 </section>
             </div>
         </div>

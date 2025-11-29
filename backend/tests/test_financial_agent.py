@@ -6,34 +6,55 @@ from src.services.financial_service import FinancialService
 
 # ================== PLUGIN TESTS ==================
 
-def test_financial_plugin_generate_boleto():
+@pytest.mark.asyncio
+async def test_financial_plugin_generate_boleto():
     plugin = FinancialPlugin()
-    with patch.object(FinancialService, 'gerar_boleto_simulado') as mock_method:
+    # Set context or pass email
+    plugin.set_context(1, "test@example.com")
+    
+    with patch.object(FinancialService, 'gerar_boleto_simulado', new_callable=AsyncMock) as mock_method:
         mock_method.return_value = {"codigo": "123"}
-        result = plugin.generate_boleto("test@example.com")
+        result = await plugin.generate_boleto(email="test@example.com")
         assert "123" in result
         mock_method.assert_called_with("test@example.com", None)
 
-def test_financial_plugin_generate_boleto_error():
+@pytest.mark.asyncio
+async def test_financial_plugin_generate_boleto_error():
     plugin = FinancialPlugin()
-    with patch.object(FinancialService, 'gerar_boleto_simulado') as mock_method:
+    plugin.set_context(1, "erro@example.com")
+    
+    with patch.object(FinancialService, 'gerar_boleto_simulado', new_callable=AsyncMock) as mock_method:
         mock_method.return_value = None
-        result = plugin.generate_boleto("erro@example.com")
+        result = await plugin.generate_boleto(email="erro@example.com")
         assert "Não foi possível" in result
 
-def test_financial_plugin_check_payment_status():
+@pytest.mark.asyncio
+async def test_financial_plugin_check_payment_status():
     plugin = FinancialPlugin()
-    with patch.object(FinancialService, 'check_payment_status') as mock_method:
+    with patch.object(FinancialService, 'check_payment_status', new_callable=AsyncMock) as mock_method:
         mock_method.return_value = "pago"
-        result = plugin.check_payment_status("123")
+        result = await plugin.check_payment_status("123")
         assert "pago" in result
 
-def test_financial_plugin_get_invoices():
+@pytest.mark.asyncio
+async def test_financial_plugin_get_invoices():
     plugin = FinancialPlugin()
-    with patch.object(FinancialService, 'get_invoices') as mock_method:
+    plugin.set_context(1, "test@example.com")
+    
+    with patch.object(FinancialService, 'get_invoices', new_callable=AsyncMock) as mock_method:
         mock_method.return_value = [{"id": 1}]
-        result = plugin.get_invoices(1)
+        result = await plugin.get_invoices(cliente_id=1)
         assert '[{"id": 1}]' in result
+
+@pytest.mark.asyncio
+async def test_financial_plugin_verify_client_status():
+    plugin = FinancialPlugin()
+    # Mock TechnicalService.get_client_by_email
+    with patch("src.services.technical_service.TechnicalService.get_client_by_email", new_callable=AsyncMock) as mock_method:
+        mock_method.return_value = 123
+        result = await plugin.verify_client_status("test@example.com")
+        assert "Cliente encontrado" in result
+        mock_method.assert_called_with("test@example.com")
 
 # ================== AGENT TESTS ==================
 

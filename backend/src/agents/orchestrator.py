@@ -48,6 +48,7 @@ class AgentOrchestrator:
         # Update context with history for agents
         agent_context = context.copy() if context else {}
         agent_context["chat_history"] = history[-5:] # Pass last 5 messages
+        agent_context["is_authenticated"] = "client_id" in agent_context
         
         try:
             # Start a custom span for the transaction
