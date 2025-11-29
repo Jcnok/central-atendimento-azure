@@ -102,7 +102,7 @@ class AgentOrchestrator:
                 span.record_exception(e)
                 span.set_status(trace.Status(trace.StatusCode.ERROR))
                 span.end()
-            logger.error(f"Error in orchestrator: {e}")
+            logger.error(f"Error in orchestrator: {e}", exc_info=True)
             return {
                 "response": "Desculpe, ocorreu um erro interno ao processar sua mensagem.",
                 "agent_used": "system_error",
