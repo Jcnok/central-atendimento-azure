@@ -120,19 +120,22 @@ class FinancialAgent:
         self.plugin = FinancialPlugin() # Keep reference
         
         # Add Azure OpenAI Service
-        # Note: In a real scenario, we should handle cases where keys are missing
-        if settings.AZURE_OPENAI_KEY and settings.AZURE_OPENAI_ENDPOINT:
-            self.kernel.add_service(
-                AzureChatCompletion(
-                    service_id="financial",
-                    deployment_name=settings.AZURE_OPENAI_DEPLOYMENT_GPT4O_MINI,
-                    endpoint=settings.AZURE_OPENAI_ENDPOINT,
-                    api_key=settings.AZURE_OPENAI_KEY,
-                    api_version=settings.AZURE_OPENAI_API_VERSION
-                )
-            )
+        # Add Azure OpenAI Service
+        if not settings.AZURE_OPENAI_ENDPOINT or not settings.AZURE_OPENAI_KEY:
+            logger.error("Azure OpenAI credentials not found in Financial Agent.")
         else:
-            logger.warning("Azure OpenAI credentials not found. Financial Agent will not work correctly.")
+            try:
+                self.kernel.add_service(
+                    AzureChatCompletion(
+                        service_id="financial",
+                        deployment_name=settings.AZURE_OPENAI_DEPLOYMENT_GPT4O_MINI,
+                        endpoint=settings.AZURE_OPENAI_ENDPOINT,
+                        api_key=settings.AZURE_OPENAI_KEY,
+                        api_version=settings.AZURE_OPENAI_API_VERSION
+                    )
+                )
+            except Exception as e:
+                logger.error(f"Failed to initialize AzureChatCompletion in Financial Agent: {e}")
         
         # Register Plugin
         self.kernel.add_plugin(self.plugin, plugin_name="FinancialPlugin")
