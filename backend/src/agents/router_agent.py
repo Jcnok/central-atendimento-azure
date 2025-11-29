@@ -49,15 +49,24 @@ REGRAS:
         self.kernel = Kernel()
         
         # Add Azure OpenAI service
-        self.kernel.add_service(
-            AzureChatCompletion(
-                service_id="router",
-                deployment_name=settings.AZURE_OPENAI_DEPLOYMENT_GPT4O_MINI,
-                endpoint=settings.AZURE_OPENAI_ENDPOINT,
-                api_key=settings.AZURE_OPENAI_KEY,
-                api_version=settings.AZURE_OPENAI_API_VERSION
-            )
-        )
+        # Add Azure OpenAI service
+        if not settings.AZURE_OPENAI_ENDPOINT or not settings.AZURE_OPENAI_KEY:
+            logger.error("Azure OpenAI credentials not found in Router Agent.")
+            # We don't raise here to allow app to start, but routing will fail.
+            # Alternatively, we could raise to stop startup.
+        else:
+            try:
+                self.kernel.add_service(
+                    AzureChatCompletion(
+                        service_id="router",
+                        deployment_name=settings.AZURE_OPENAI_DEPLOYMENT_GPT4O_MINI,
+                        endpoint=settings.AZURE_OPENAI_ENDPOINT,
+                        api_key=settings.AZURE_OPENAI_KEY,
+                        api_version=settings.AZURE_OPENAI_API_VERSION
+                    )
+                )
+            except Exception as e:
+                logger.error(f"Failed to initialize AzureChatCompletion in Router Agent: {e}")
         
         logger.info("Router Agent initialized successfully")
     
@@ -88,14 +97,14 @@ REGRAS:
             
             # Create execution settings
             from semantic_kernel.connectors.ai.open_ai import AzureChatPromptExecutionSettings
-            settings = AzureChatPromptExecutionSettings(
+            execution_settings = AzureChatPromptExecutionSettings(
                 temperature=0.3,  # Low temperature for consistent classification
                 max_tokens=150
             )
             
             response = await chat_service.get_chat_message_content(
                 chat_history=chat_history,
-                settings=settings
+                settings=execution_settings
             )
             
             
