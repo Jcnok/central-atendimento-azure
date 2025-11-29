@@ -60,18 +60,21 @@ class GeneralAgent:
     def __init__(self):
         self.kernel = Kernel()
         
-        if settings.AZURE_OPENAI_KEY and settings.AZURE_OPENAI_ENDPOINT:
-            self.kernel.add_service(
-                AzureChatCompletion(
-                    service_id="general",
-                    deployment_name=settings.AZURE_OPENAI_DEPLOYMENT_GPT4O_MINI,
-                    endpoint=settings.AZURE_OPENAI_ENDPOINT,
-                    api_key=settings.AZURE_OPENAI_KEY,
-                    api_version=settings.AZURE_OPENAI_API_VERSION
-                )
-            )
+        if not settings.AZURE_OPENAI_ENDPOINT or not settings.AZURE_OPENAI_KEY:
+            logger.error("Azure OpenAI credentials not found in General Agent.")
         else:
-            logger.warning("Azure OpenAI credentials not found. General Agent will not work correctly.")
+            try:
+                self.kernel.add_service(
+                    AzureChatCompletion(
+                        service_id="general",
+                        deployment_name=settings.AZURE_OPENAI_DEPLOYMENT_GPT4O_MINI,
+                        endpoint=settings.AZURE_OPENAI_ENDPOINT,
+                        api_key=settings.AZURE_OPENAI_KEY,
+                        api_version=settings.AZURE_OPENAI_API_VERSION
+                    )
+                )
+            except Exception as e:
+                logger.error(f"Failed to initialize AzureChatCompletion in General Agent: {e}")
         
         self.kernel.add_plugin(GeneralPlugin(), plugin_name="GeneralPlugin")
         
@@ -93,7 +96,7 @@ class GeneralAgent:
             chat_service = self.kernel.get_service(service_id="general")
         except Exception as e:
             logger.error(f"Failed to get chat service: {e}")
-            return "Desculpe, estou com problemas técnicos no momento."
+            return f"Desculpe, estou com problemas técnicos no momento. Detalhe: {str(e)}"
         
         from semantic_kernel.connectors.ai.open_ai import AzureChatPromptExecutionSettings
         from semantic_kernel.connectors.ai.function_choice_behavior import FunctionChoiceBehavior
@@ -112,4 +115,4 @@ class GeneralAgent:
             return str(result)
         except Exception as e:
             logger.error(f"Error processing message: {e}")
-            return "Ocorreu um erro ao processar sua solicitação."
+            return f"Ocorreu um erro técnico detalhado: {str(e)}"
