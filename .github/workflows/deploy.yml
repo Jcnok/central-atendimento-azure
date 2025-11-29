@@ -63,9 +63,10 @@ jobs:
         cp backend/requirements.txt .
 
     - name: Deploy to Azure Web App
-      uses: azure/webapps-deploy@v2
+      uses: azure/webapps-deploy@v3
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         slot-name: 'production'
         package: . # Implanta o conteúdo do diretório raiz do repositório
+        clean: true # Limpa a implantação anterior para evitar conflitos
         startup-command: 'cd backend && gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.main:app --bind 0.0.0.0:8000'
