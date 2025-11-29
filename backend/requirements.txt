@@ -165,7 +165,7 @@ opentelemetry-sdk==1.38.0
     # via semantic-kernel
 opentelemetry-semantic-conventions==0.59b0
     # via opentelemetry-sdk
-packaging==25.0
+packaging
     # via
     #   deprecation
     #   gunicorn
@@ -313,5 +313,5 @@ yarl==1.22.0
     # via aiohttp
 zipp==3.23.0
     # via importlib-metadata
-langchain-community==0.0.10
-langchain==0.1.0
+langchain-community
+langchain
