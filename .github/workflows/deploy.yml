@@ -58,6 +58,10 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+    - name: Prepare for Deployment
+      run: |
+        cp backend/requirements.txt .
+
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
