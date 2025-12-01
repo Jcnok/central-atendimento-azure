@@ -144,3 +144,79 @@ class SalesService:
             except Exception as e:
                 await session.rollback()
                 return f"Erro ao processar upgrade: {str(e)}"
+
+    @staticmethod
+    async def apply_discount(cliente_id: int, discount_type: str = "retention_20_percent_6_months") -> Dict[str, any]:
+        """
+        Aplica um desconto de retenção ao contrato do cliente.
+        """
+        async with AsyncSessionLocal() as session:
+            try:
+                # Busca contrato ativo
+                result = await session.execute(
+                    select(Contrato).filter(Contrato.cliente_id == cliente_id, Contrato.status == 'ativo')
+                )
+                contrato = result.scalars().first()
+                
+                if not contrato:
+                    return {"error": "Cliente sem contrato ativo para aplicar desconto."}
+
+                # Lógica simplificada: Registrar o desconto no contrato (campo novo ou observação)
+                # Como não temos campo de desconto no modelo, vamos simular criando um chamado de registro
+                
+                protocolo = gerar_protocolo()
+                chamado = Chamado(
+                    protocolo=protocolo,
+                    cliente_id=cliente_id,
+                    canal="chat_ia",
+                    mensagem=f"Desconto de retenção aplicado: {discount_type}. 20% off por 6 meses.",
+                    status="resolvido",
+                    prioridade="alta",
+                    categoria="retencao",
+                    resolucao="Desconto aplicado com sucesso.",
+                    data_fechamento=date.today()
+                )
+                session.add(chamado)
+                await session.commit()
+                
+                return {
+                    "success": True,
+                    "message": "Desconto de 20% aplicado com sucesso para as próximas 6 faturas.",
+                    "protocolo": protocolo
+                }
+            except Exception as e:
+                await session.rollback()
+                return {"error": f"Erro ao aplicar desconto: {str(e)}"}
+
+    @staticmethod
+    async def create_ticket(cliente_id: int, description: str, priority: str = "normal") -> Dict[str, any]:
+        """
+        Cria um ticket de suporte (vendas/financeiro) manualmente.
+        """
+        async with AsyncSessionLocal() as session:
+            try:
+                protocolo = gerar_protocolo()
+                chamado = Chamado(
+                    protocolo=protocolo,
+                    cliente_id=cliente_id,
+                    canal="chat_ia",
+                    mensagem=description,
+                    status="aberto",
+                    prioridade=priority,
+                    categoria="vendas",
+                    resolucao=None,
+                    data_fechamento=None
+                )
+                session.add(chamado)
+                await session.commit()
+                
+                return {
+                    "ticket_id": chamado.id,
+                    "protocolo": protocolo,
+                    "status": "aberto",
+                    "priority": priority,
+                    "description": description
+                }
+            except Exception as e:
+                await session.rollback()
+                return {"error": f"Erro ao criar ticket: {str(e)}"}

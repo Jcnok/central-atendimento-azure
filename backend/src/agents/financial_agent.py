@@ -121,6 +121,7 @@ class FinancialAgent:
         
         # Add Azure OpenAI Service
         # Add Azure OpenAI Service
+        self.is_configured = False
         if not settings.AZURE_OPENAI_ENDPOINT or not settings.AZURE_OPENAI_KEY:
             logger.error("Azure OpenAI credentials not found in Financial Agent.")
         else:
@@ -134,6 +135,7 @@ class FinancialAgent:
                         api_version=settings.AZURE_OPENAI_API_VERSION
                     )
                 )
+                self.is_configured = True
             except Exception as e:
                 logger.error(f"Failed to initialize AzureChatCompletion in Financial Agent: {e}")
         
@@ -162,6 +164,9 @@ class FinancialAgent:
 
         chat_history.add_user_message(message)
         
+        if not self.is_configured:
+            return "Erro de Configuração: As credenciais do Azure OpenAI não foram detectadas. Por favor, configure AZURE_OPENAI_KEY e AZURE_OPENAI_ENDPOINT nas configurações do App Service."
+
         try:
             chat_service = self.kernel.get_service(service_id="financial")
         except Exception as e:

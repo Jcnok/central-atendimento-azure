@@ -16,7 +16,7 @@ COPY frontend/ .
 RUN npm run build
 
 # ==================== STAGE 2: Backend Runtime ====================
-FROM python:3.10-slim
+FROM python:3.12-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1

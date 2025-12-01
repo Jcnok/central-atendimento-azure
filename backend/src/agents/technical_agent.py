@@ -68,6 +68,32 @@ class TechnicalPlugin:
             return f"Cliente identificado com sucesso. ID: {client_id}"
         return "Cliente não encontrado com este email."
 
+    @kernel_function(description="Busca tickets abertos do cliente atual.")
+    async def get_open_tickets(self) -> str:
+        """
+        Busca tickets abertos.
+        """
+        if not self.current_client_id:
+            return "Erro: Cliente não identificado no contexto."
+            
+        tickets = await TechnicalService.get_open_tickets(self.current_client_id)
+        if tickets:
+            return json.dumps(tickets)
+        return "O cliente não possui tickets abertos no momento."
+
+    @kernel_function(description="Atualiza um ticket existente (status, prioridade ou nota).")
+    async def update_ticket(self, ticket_id: int, status: Optional[str] = None, priority: Optional[str] = None, note: Optional[str] = None) -> str:
+        """
+        Atualiza ticket.
+        Args:
+            ticket_id: ID do ticket.
+            status: Novo status (ex: resolvido).
+            priority: Nova prioridade (ex: alta).
+            note: Nota ou observação a adicionar.
+        """
+        result = await TechnicalService.update_ticket(ticket_id, status, priority, note)
+        return json.dumps(result)
+
 class TechnicalAgent:
     """
     Agent specialized in technical support.
@@ -77,25 +103,32 @@ class TechnicalAgent:
     Sua missão é ajudar clientes a resolver problemas técnicos de internet, TV e telefone.
     
     FERRAMENTAS DISPONÍVEIS:
-    1. search_knowledge_base: Use para buscar soluções conhecidas antes de criar um ticket.
-    2. check_system_status: Use se o cliente relatar queda geral ou falha massiva.
-    3. create_ticket: Use APENAS se não conseguir resolver o problema com a base de conhecimento.
-    4. identify_client: Use para encontrar o cadastro do cliente pelo EMAIL.
+    1. search_knowledge_base: Use para buscar soluções conhecidas.
+    2. check_system_status: Use se o cliente relatar queda geral.
+    3. get_open_tickets: Use SEMPRE no início do atendimento para saber se já existe chamado aberto.
+    4. create_ticket: Use APENAS se não houver ticket aberto e não conseguir resolver com a base de conhecimento.
+    5. update_ticket: Use para modificar um ticket existente (resolver, escalar, adicionar nota).
+    6. identify_client: Use para encontrar o cadastro do cliente pelo EMAIL.
     
-    REGRAS:
-    - Primeiro, tente diagnosticar e resolver o problema usando a base de conhecimento.
-    - Se encontrar uma solução, explique o passo a passo para o cliente.
-    - Se o cliente confirmar que não resolveu, aí sim crie um ticket.
-    - Se precisar criar um ticket e não tiver o 'client_id' no contexto (usuário não logado), PEÇA O EMAIL e use a ferramenta 'identify_client'.
-    - NUNCA peça o "ID do cliente". Peça o EMAIL.
-    - Seja empático e técnico, mas use linguagem acessível.
-    - CONTEXTO: Você tem acesso ao 'client_plan' (Plano Atual) e 'client_tickets' (Histórico). Verifique se o problema já foi relatado antes de abrir novo ticket.
+    REGRAS DE FLUXO:
+    1. **Identificação**: Se não tiver o ID do cliente, peça o email e use `identify_client`.
+    2. **Verificação Inicial**: Assim que identificar o cliente, use `get_open_tickets` para ver se ele já tem pendências.
+    
+    CENÁRIOS DE TICKET:
+    - **Cenário A (Internet Voltou)**: Se o cliente informar que o serviço voltou e houver ticket aberto, use `update_ticket` com `status='resolvido'` e `note='Cliente confirmou normalização'`.
+    - **Cenário B (Recusa de Testes)**: Se o cliente se recusar a fazer testes, use `update_ticket` no ticket existente (ou crie um novo) com `priority='alta'` e `note='Cliente recusou procedimentos técnicos'`.
+    - **Cenário C (Problema Persiste)**: Se os procedimentos da base de conhecimento não funcionarem, crie um ticket (`create_ticket`) ou atualize o existente com nota técnica.
+    
+    DIRETRIZES:
+    - NUNCA crie um novo ticket se já existir um aberto para o mesmo problema. Atualize o existente.
+    - Seja direto e resolutivo.
     """
 
     def __init__(self):
         self.kernel = Kernel()
         self.plugin = TechnicalPlugin() # Keep reference to plugin instance
         
+        self.is_configured = False
         if not settings.AZURE_OPENAI_ENDPOINT or not settings.AZURE_OPENAI_KEY:
             logger.error("Azure OpenAI credentials not found in Technical Agent.")
         else:
@@ -109,6 +142,7 @@ class TechnicalAgent:
                         api_version=settings.AZURE_OPENAI_API_VERSION
                     )
                 )
+                self.is_configured = True
             except Exception as e:
                 logger.error(f"Failed to initialize AzureChatCompletion in Technical Agent: {e}")
         
@@ -132,6 +166,9 @@ class TechnicalAgent:
 
         chat_history.add_user_message(message)
         
+        if not self.is_configured:
+            return "Erro de Configuração: As credenciais do Azure OpenAI não foram detectadas. Por favor, configure AZURE_OPENAI_KEY e AZURE_OPENAI_ENDPOINT nas configurações do App Service."
+
         try:
             chat_service = self.kernel.get_service(service_id="technical")
         except Exception as e:

@@ -1,0 +1,8 @@
+Para problemas de conexão com a internet (fibra ótica):
+1. Verifique se o modem está ligado na tomada.
+2. Observe as luzes do modem:
+   - Luz PON piscando: Problema de sinal na fibra (rompimento ou manutenção).
+   - Luz LOS vermelha: Sem sinal de fibra (cabo desconectado ou rompido).
+   - Luzes normais mas sem navegação: Tente reiniciar o modem (desligue, aguarde 10s, ligue).
+3. Se a lentidão persistir, verifique quantos dispositivos estão conectados.
+4. Teste a velocidade via cabo de rede para descartar problemas no Wi-Fi.

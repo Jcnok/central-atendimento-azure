@@ -1,256 +1,156 @@
-# 📘 Central de Atendimento Inteligente
+# 🏢 Central de Atendimento Inteligente | Enterprise AI Solution
 
 <div align="center">
 
-![FastAPI](https://img.shields.io/badge/FastAPI-0.121.2-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![React](https://img.shields.io/badge/React-19.2.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![Azure App Service](https://img.shields.io/badge/Azure_App_Service-Deployed-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Azure OpenAI](https://img.shields.io/badge/Azure%20OpenAI-GPT--4o-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-High%20Performance-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-pgvector-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![React](https://img.shields.io/badge/React-Enterprise%20UI-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
 ![Build Status](https://img.shields.io/github/actions/workflow/status/Jcnok/central-atendimento-azure/deploy.yml?style=for-the-badge&logo=githubactions&logoColor=white)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
-![Code Size](https://img.shields.io/github/languages/code-size/Jcnok/central-atendimento-azure?style=for-the-badge)
-![Last Commit](https://img.shields.io/github/last-commit/Jcnok/central-atendimento-azure?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
 
 </div>
 
-> *"A tecnologia é melhor quando aproxima as pessoas."* — Matt Mullenweg
+---
+
+## 📋 Visão Geral Executiva
+
+A **Central de Atendimento Inteligente** é uma plataforma de orquestração de experiências digitais baseada em Inteligência Artificial Generativa. Projetada para ambientes corporativos de alta demanda, a solução transcende os chatbots tradicionais ao implementar uma arquitetura de **Agentes Autônomos Especializados**.
+
+Utilizando o poder do **Azure OpenAI (GPT-4o)** e **RAG (Retrieval-Augmented Generation)**, o sistema não apenas responde a perguntas, mas executa processos de negócio complexos — desde a triagem técnica avançada até negociações comerciais persuasivas e retenção de clientes.
+
+### 🚀 Diferenciais Competitivos
+*   **Hiper-Personalização**: Cada interação é contextualizada com histórico do cliente e dados de CRM.
+*   **Resolução Autônoma**: Capacidade de resolver 70%+ das solicitações sem intervenção humana (Nível 1 e 2).
+*   **Eficiência Operacional**: Redução drástica no TMA (Tempo Médio de Atendimento) e custos operacionais.
+*   **Arquitetura Escalável**: Microsserviços assíncronos prontos para Kubernetes e Azure App Service.
 
 ---
 
-## 📖 Índice
+## 🏛 Arquitetura de Solução
 
-1. [O Problema & A Solução](#-o-problema--a-solução)
-2. [Arquitetura do Sistema](#-arquitetura-do-sistema)
-3. [Stack Tecnológica](#-stack-tecnológica)
-4. [Guia de Início Rápido](#-guia-de-início-rápido)
-5. [Estratégias de Deploy](#-estratégias-de-deploy)
-6. [Casos de Uso](#-casos-de-uso)
-7. [Troubleshooting](#-troubleshooting)
-8. [Roadmap](#-roadmap)
-9. [Contribuindo](#-contribuindo)
-10. [Licença](#-licença)
-
----
-
-## 🧐 O Problema & A Solução
-
-### O Cenário
-Imagine uma central de atendimento sobrecarregada. Telefones tocando incessantemente, e-mails acumulando e clientes frustrados esperando horas por uma resposta simples sobre a segunda via de um boleto. Os atendentes humanos, exaustos, gastam 80% do tempo respondendo às mesmas perguntas triviais, deixando os problemas complexos — que realmente exigem empatia e criatividade — em segundo plano.
-
-### A Nossa Abordagem
-A **Central de Atendimento Inteligente** não é apenas um chatbot; é um **orquestrador de experiências**. Ela atua como um *concierge* digital, recebendo cada solicitação, entendendo a intenção através de Inteligência Artificial e decidindo instantaneamente o melhor curso de ação.
-
-*   **Para o trivial (ex: 2ª via de boleto):** Resolução imediata e automática. O cliente sai feliz em segundos.
-*   **Para o complexo (ex: problemas técnicos):** Encaminhamento cirúrgico para o especialista humano, já com todo o contexto mastigado.
-
-O resultado? Uma sinfonia de eficiência onde a máquina cuida da repetição e o humano cuida da relação.
-
----
-
-## 🏛 Arquitetura do Sistema
-
-Nossa arquitetura segue o padrão **Monolito Modular Moderno**, projetado para ser robusto, escalável e fácil de manter. O backend opera de forma **Assíncrona (AsyncIO)**, garantindo alta performance mesmo sob tráfego intenso.
+A plataforma adota o padrão **Multi-Agent System (MAS)**, onde um orquestrador inteligente distribui tarefas para agentes especialistas.
 
 ```mermaid
 graph TD
-    User[👤 Usuário] -->|HTTPS| CDN[☁️ Azure App Service]
+    User[👤 Cliente Omnichannel] -->|HTTPS| Gateway[⚡ API Gateway]
     
-    subgraph "Frontend (React)"
-        UI[🖥️ Interface Web]
-        Chat[💬 Chat Widget]
+    subgraph "Intelligent Core (Backend)"
+        Gateway --> Router[🎯 Router Agent]
+        
+        Router -->|Técnico| TechAgent[🔧 Technical Agent]
+        Router -->|Comercial| SalesAgent[📈 Sales Agent]
+        Router -->|Financeiro| FinAgent[💰 Financial Agent]
+        
+        TechAgent -->|RAG Search| VectorDB[(🧠 Knowledge Base\npgvector)]
+        SalesAgent -->|Retention Logic| CRM[👥 CRM System]
+        FinAgent -->|Transactional| ERP[📊 ERP System]
     end
     
-    subgraph "Backend (FastAPI Async)"
-        API[⚡ API Gateway]
-        Auth[🔒 Auth & Security]
-        IA[🧠 IA Classifier]
-        Workers[⚙️ Async Workers]
+    subgraph "Data & Infrastructure"
+        VectorDB <--> AzureOpenAI[☁️ Azure OpenAI\nEmbeddings + GPT-4o]
+        Router <--> Redis[(⚡ Session Cache)]
     end
-    
-    subgraph "Data Layer"
-        DB[(🗄️ PostgreSQL)]
-    end
-
-    CDN --> UI
-    UI -->|REST API| API
-    Chat -->|REST API| API
-    
-    API --> Auth
-    API --> IA
-    API --> Workers
-    
-    Workers -->|Async SQL| DB
 ```
 
-### 🤖 Arquitetura de Agentes LLM (Em Desenvolvimento)
-
-O sistema está evoluindo para uma **arquitetura de agentes inteligentes** baseada em Azure OpenAI, que substituirá o classificador baseado em regras por agentes especializados com capacidades de raciocínio e aprendizado.
-
-**Padrão Arquitetural**: Hierárquico com Micro-Agentes
-
-```mermaid
-graph TD
-    User[👤 Cliente] -->|Mensagem| Router[🎯 Router Agent<br/>GPT-4o-mini]
-    
-    Router -->|Financeiro| FinAgent[💰 Financial Agent<br/>GPT-4o]
-    Router -->|Técnico| TechAgent[🔧 Technical Agent<br/>GPT-4o + RAG]
-    Router -->|Comercial| SalesAgent[📈 Sales Agent<br/>GPT-4o]
-    Router -->|Geral| GenAgent[💬 General Agent<br/>GPT-4o-mini]
-    
-    FinAgent -->|Tools| BoletoAPI[📄 Boleto API]
-    TechAgent -->|Tools| TicketAPI[🎫 Ticket API]
-    TechAgent -->|RAG| VectorDB[(🧠 pgvector)]
-    SalesAgent -->|Tools| CRM[👥 CRM API]
-    
-    FinAgent --> Cache[(⚡ Redis Cache)]
-    TechAgent --> Cache
-    SalesAgent --> Cache
-```
-
-**Benefícios**:
-- ✅ Resolução automática de 70%+ das solicitações
-- ✅ Respostas contextualizadas e personalizadas
-- ✅ Aprendizado contínuo via RAG (Retrieval-Augmented Generation)
-- ✅ Custo operacional: ~$46/mês (vs $9.000/mês com atendentes)
-
-> 📘 **Documentação Completa**: Veja [LLM Agent Architecture](docs/llm_agent_architecture.md) para detalhes de implementação, custos e roadmap.
+### Componentes Chave
+1.  **Technical Agent (RAG-Powered)**: Utiliza `pgvector` para busca semântica em base de conhecimento técnica. Diagnostica falhas de internet/TV e abre chamados automaticamente.
+2.  **Sales Agent (Proactive)**: Implementa lógica de vendas agressiva ("Wolf of Wall Street" persona). Realiza upgrades em tempo real e aplica estratégias de retenção com descontos dinâmicos.
+3.  **Financial Agent**: Integrado ao ERP para emissão de boletos, desbloqueio em confiança e análise de faturas.
 
 ---
 
-## 🛠 Stack Tecnológica
+## 🛠 Stack Tecnológica Corporativa
 
-### Backend (O Motor)
-*   **Python 3.12+**: A linguagem da IA e da produtividade.
-*   **FastAPI 0.121.2**: Framework moderno, rápido e assíncrono.
-*   **SQLAlchemy (AsyncIO)**: ORM poderoso para interações não-bloqueantes com o banco.
-*   **Pydantic**: Validação de dados robusta e tipada.
+### Backend & AI Core
+*   **Language**: Python 3.12+ (AsyncIO)
+*   **Framework**: FastAPI 0.121.2
+*   **LLM Orchestration**: Semantic Kernel / Native Azure OpenAI SDK
+*   **AI Models**: GPT-4o (Reasoning), GPT-4o-mini (Routing), text-embedding-3-small (Vectorization)
+*   **Database**: PostgreSQL 14+ com extensão `vector` (pgvector)
+*   **Cache**: Azure Redis (Session Management)
 
-### LLM & AI (Próxima Geração)
-*   **Azure OpenAI (GPT-4o/GPT-4o-mini)**: Modelos de linguagem para agentes inteligentes.
-*   **Semantic Kernel**: Framework de orquestração de agentes da Microsoft.
-*   **pgvector**: Extensão PostgreSQL para busca vetorial (RAG).
-*   **Azure Redis**: Cache de sessões e respostas frequentes.
+### Frontend & UX
+*   **Framework**: React 19.2.0
+*   **Build System**: Vite
+*   **Styling**: CSS Modules (Scoped & Performant)
 
-### Frontend (A Face)
-*   **React 19.2.0**: Biblioteca líder para interfaces interativas.
-*   **Vite**: Build tool ultrarrápida.
-*   **CSS Modules**: Estilização modular e segura.
-
-### Infraestrutura & DevOps (A Fundação)
-*   **Docker**: Containerização para consistência entre ambientes.
-*   **Azure App Service**: PaaS escalável para hospedagem.
-*   **PostgreSQL 14+**: Banco de dados relacional robusto.
-*   **GitHub Actions**: CI/CD automatizado.
+### DevOps & Cloud
+*   **Cloud Provider**: Microsoft Azure (App Service, Database for PostgreSQL)
+*   **CI/CD**: GitHub Actions (Automated Testing & Deployment)
+*   **Containerization**: Docker & Docker Compose
 
 ---
 
-## 🚀 Guia de Início Rápido
+## 🚀 Guia de Implantação
 
 ### Pré-requisitos
-*   Docker & Docker Compose
-*   Git
+*   Docker Engine 24+
+*   Azure Subscription (com OpenAI Service habilitado)
 
-### Rodando Localmente (Modo Turbo)
-
-1.  **Clone o repositório:**
-    ```bash
-    git clone https://github.com/Jcnok/central-atendimento-azure.git
-    cd central-atendimento-azure
-    ```
-
-2.  **Suba a aplicação com Docker Compose:**
-    ```bash
-    docker-compose up --build
-    ```
-
-3.  **Acesse:**
-    *   Frontend: `http://localhost:3000` (ou a porta definida no compose)
-    *   API Docs: `http://localhost:8000/docs`
-
----
-
-## 🚢 Estratégias de Deploy
-
-Oferecemos flexibilidade total para levar sua aplicação para o mundo.
-
-### Opção 1: Azure App Service (Recomendado)
-Nossa pipeline de CI/CD (`.github/workflows/deploy.yml`) já está configurada.
-1.  Crie um App Service no Azure (Linux + Python).
-2.  Configure as variáveis de ambiente (`DATABASE_URL`, `SECRET_KEY`).
-3.  Obtenha o *Publish Profile* e adicione aos Secrets do GitHub (`AZURE_WEBAPP_PUBLISH_PROFILE`).
-4.  Faça um push para a branch `master`. **Deploy automático!** 🪄
-
-### Opção 2: Docker Puro
-Para servidores VPS ou máquinas virtuais.
+### 1. Configuração de Ambiente
+Clone o repositório e configure as variáveis de ambiente:
 ```bash
-docker build -t central-atendimento .
-docker run -p 8000:8000 --env-file .env central-atendimento
+git clone https://github.com/Jcnok/central-atendimento-azure.git
+cd central-atendimento-azure
+cp backend/.env.example backend/.env
 ```
 
-### Opção 3: Multicloud (Kubernetes/K8s)
-O container é *stateless* e pronto para orquestração. Basta criar os manifestos de Deployment e Service apontando para a imagem gerada.
+### 2. Execução Local (Docker)
+Inicie toda a stack (Frontend, Backend, Banco de Dados) com um único comando:
+```bash
+docker-compose up --build
+```
+*   **Frontend**: `http://localhost:3000`
+*   **API Documentation**: `http://localhost:8000/docs`
+
+### 3. População da Base de Conhecimento (RAG)
+Para ativar a inteligência do Agente Técnico, popule o banco vetorial:
+```bash
+# Dentro do container ou venv
+python backend/scripts/seed_knowledge_base.py
+```
 
 ---
 
-## 💡 Casos de Uso
+## 💼 Cenários de Negócio
 
-### 1. Autoatendimento Financeiro
-*   **Usuário:** "Quero a segunda via do meu boleto."
-*   **Sistema:** Identifica intenção -> Valida usuário -> Gera boleto -> Envia link.
-*   **Tempo:** < 5 segundos.
+### 🔧 Suporte Técnico Inteligente
+> **Cliente**: "Minha internet caiu e a luz PON está piscando."
+>
+> **Agente Técnico**:
+> 1.  Consulta a Base de Conhecimento via busca vetorial (`pgvector`).
+> 2.  Identifica "Rompimento de Fibra" baseado nos sintomas.
+> 3.  Verifica se já existe chamado aberto (`get_open_tickets`).
+> 4.  Se não, abre um ticket prioritário e informa o SLA de 4 horas.
 
-### 2. Triagem de Suporte Técnico
-*   **Usuário:** "Meu sistema não está abrindo a tela de relatórios."
-*   **Sistema:** Identifica problema técnico -> Classifica prioridade -> Cria ticket -> Encaminha para fila "Nível 2".
-*   **Resultado:** O técnico recebe o chamado já classificado e o usuário recebe um protocolo imediato.
-
----
-
-## 🔧 Troubleshooting
-
-**Erro: `[Errno 111] Connect call failed` nos testes**
-*   **Causa:** Tentativa de conectar ao PostgreSQL durante testes unitários.
-*   **Solução:** O sistema agora usa `SQLite` em memória automaticamente para testes. Certifique-se de ter as dependências de teste instaladas.
-
-**Erro: `ModuleNotFoundError: No module named 'asyncpg'`**
-*   **Causa:** Dependência do driver assíncrono faltando.
-*   **Solução:** Execute `pip install -r requirements.txt`.
+### 📈 Vendas e Retenção
+> **Cliente**: "Quero cancelar minha assinatura."
+>
+> **Agente de Vendas**:
+> 1.  Analisa perfil e valor do cliente.
+> 2.  Aplica técnicas de contorno de objeções.
+> 3.  **Cartada Final**: Oferece automaticamente 20% de desconto por 6 meses (`apply_discount`).
+> 4.  Se aceito, aplica o desconto e atualiza o contrato em tempo real.
 
 ---
 
-## 🗺 Roadmap
+## 🗺 Roadmap de Evolução
 
-*   [x] **Fase 1: MVP** - Backend Async, Frontend Básico, Dockerização.
-*   [x] **Fase 2: Refatoração** - Migração total para AsyncIO, Melhorias de UX.
-*   [x] **Fase 3: Inteligência Real** - Integração com Azure OpenAI (GPT-4) para respostas generativas.
-*   [ ] **Fase 4: Omnichannel** - Integração oficial com WhatsApp Business API.
-*   [ ] **Fase 5: Analytics Avançado** - Dashboards PowerBI em tempo real.
-
----
-
-## 🤝 Contribuindo
-
-Acreditamos na força da comunidade! Para contribuir:
-
-1.  Faça um **Fork** do projeto.
-2.  Crie uma **Branch** para sua feature (`git checkout -b feature/IncrívelFeature`).
-3.  Faça o **Commit** (`git commit -m 'Add: IncrívelFeature'`).
-4.  Faça o **Push** (`git push origin feature/IncrívelFeature`).
-5.  Abra um **Pull Request**.
-
-> **Nota:** Por favor, garanta que os testes passem (`pytest`) antes de enviar.
+*   [x] **Fase 1: Core Foundation** - Arquitetura Async, Docker, Integração Azure OpenAI.
+*   [x] **Fase 2: Advanced Intelligence** - RAG com pgvector, Agentes Especialistas (Sales/Tech).
+*   [ ] **Fase 3: Omnichannel Expansion** - Integração nativa com WhatsApp Business API e Teams.
+*   [ ] **Fase 4: Voice Interface** - Integração com Azure Speech Services para atendimento por voz.
+*   [ ] **Fase 5: Predictive Analytics** - Dashboards PowerBI para análise de sentimento e tendências.
 
 ---
 
-## 📄 Licença
+## 📄 Licença e Compliance
 
-Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
----
+Este software é propriedade intelectual confidencial. O uso é restrito aos termos da licença corporativa (MIT License para fins de demonstração).
 
 <div align="center">
-  <sub>Desenvolvido com 💙 e muito ☕ por Jcnok</sub>
+  <sub>Copyright © 2025 Jcnok Enterprise Solutions. All rights reserved.</sub>
 </div>

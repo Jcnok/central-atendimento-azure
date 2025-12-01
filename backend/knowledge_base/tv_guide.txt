@@ -1,0 +1,6 @@
+Para problemas com TV por assinatura:
+1. Tela preta ou "Sem Sinal": Verifique se o cabo HDMI está bem conectado na TV e no decodificador.
+2. Imagem quadriculada: Pode ser sinal fraco. Verifique se os cabos estão bem rosqueados.
+3. Controle remoto não funciona: Troque as pilhas e verifique se nada obstrui o sensor.
+4. Canais faltando: Tente fazer uma "Sintonia Automática" ou "Busca de Canais" no menu do decodificador.
+5. Mensagem "Cartão não autorizado": Aguarde alguns minutos no canal do cliente ou entre em contato para reenviar o sinal de habilitação.
