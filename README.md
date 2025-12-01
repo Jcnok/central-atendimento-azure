@@ -1,156 +1,121 @@
-# 🏢 Central de Atendimento Inteligente | Enterprise AI Solution
+# 🚀 Central de Atendimento Inteligente | Microsoft Innovation Challenge 2025
 
 <div align="center">
 
 ![Azure OpenAI](https://img.shields.io/badge/Azure%20OpenAI-GPT--4o-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-High%20Performance-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-pgvector-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![React](https://img.shields.io/badge/React-Enterprise%20UI-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 
-![Build Status](https://img.shields.io/github/actions/workflow/status/Jcnok/central-atendimento-azure/deploy.yml?style=for-the-badge&logo=githubactions&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
+> *"A tecnologia é melhor quando aproxima as pessoas, mas a IA é melhor quando resolve os problemas delas."*
 
 </div>
 
 ---
 
-## 📋 Visão Geral Executiva
+## 🎬 O Cenário (The Problem)
 
-A **Central de Atendimento Inteligente** é uma plataforma de orquestração de experiências digitais baseada em Inteligência Artificial Generativa. Projetada para ambientes corporativos de alta demanda, a solução transcende os chatbots tradicionais ao implementar uma arquitetura de **Agentes Autônomos Especializados**.
+Imagine uma segunda-feira de manhã. A central de atendimento está em chamas.
+Telefones tocando sem parar, filas de espera de 40 minutos e clientes furiosos no Twitter.
+Os atendentes humanos, exaustos, gastam 80% do tempo respondendo: *"Senhor, já tentou reiniciar o modem?"* ou *"A segunda via está no seu e-mail"*.
 
-Utilizando o poder do **Azure OpenAI (GPT-4o)** e **RAG (Retrieval-Augmented Generation)**, o sistema não apenas responde a perguntas, mas executa processos de negócio complexos — desde a triagem técnica avançada até negociações comerciais persuasivas e retenção de clientes.
-
-### 🚀 Diferenciais Competitivos
-*   **Hiper-Personalização**: Cada interação é contextualizada com histórico do cliente e dados de CRM.
-*   **Resolução Autônoma**: Capacidade de resolver 70%+ das solicitações sem intervenção humana (Nível 1 e 2).
-*   **Eficiência Operacional**: Redução drástica no TMA (Tempo Médio de Atendimento) e custos operacionais.
-*   **Arquitetura Escalável**: Microsserviços assíncronos prontos para Kubernetes e Azure App Service.
+Enquanto isso, os problemas reais — aqueles que exigem empatia, criatividade e negociação — ficam em segundo plano. O resultado? **Churn alto, NPS baixo e custos explodindo.**
 
 ---
 
-## 🏛 Arquitetura de Solução
+## 💡 A Solução (The Innovation)
 
-A plataforma adota o padrão **Multi-Agent System (MAS)**, onde um orquestrador inteligente distribui tarefas para agentes especialistas.
+A **Central de Atendimento Inteligente** não é apenas mais um chatbot. É um **Orquestrador de Experiências** alimentado pelo estado da arte da IA Generativa no Azure.
+
+Nós não substituímos o humano; nós o elevamos. Nossa IA assume o papel de "primeira linha de defesa" com uma capacidade cognitiva nunca antes vista, resolvendo o trivial instantaneamente e preparando o terreno para o complexo.
+
+### ✨ Conheça o Time (Nossos Agentes)
+
+Diferente de sistemas baseados em regras, nossa arquitetura utiliza **Agentes Autônomos Especializados**, cada um com uma "persona" e ferramentas próprias:
+
+#### 1. 🐺 O Agente de Vendas ("The Wolf")
+*   **Personalidade**: Persuasivo, proativo e focado em resultados. Inspirado nos maiores vendedores do mundo.
+*   **Superpoder**: Ele não aceita um "não" facilmente. Se você tentar cancelar, ele vai entender sua dor, oferecer alternativas e, se necessário, sacar um desconto estratégico de 20% (calculado em tempo real) para te manter na base.
+*   **Tech**: GPT-4o com *Temperature* ajustada para criatividade e persuasão.
+
+#### 2. 🔧 O Agente Técnico ("The Engineer")
+*   **Personalidade**: Metódico, preciso e paciente.
+*   **Superpoder**: Memória Infinita. Ele leu todos os manuais técnicos da empresa. Se sua luz PON está piscando, ele sabe exatamente o que é, porque consultou a base de conhecimento vetorial em milissegundos.
+*   **Tech**: **RAG (Retrieval-Augmented Generation)** com `pgvector` e Azure OpenAI Embeddings.
+
+---
+
+## 🏛 Sob o Capô (Architecture)
+
+Construído sobre a robustez do **Microsoft Azure**, nossa arquitetura é modular, assíncrona e escalável.
 
 ```mermaid
 graph TD
-    User[👤 Cliente Omnichannel] -->|HTTPS| Gateway[⚡ API Gateway]
+    User[👤 Cliente] -->|Chat| Router[🧠 Router Agent]
     
-    subgraph "Intelligent Core (Backend)"
-        Gateway --> Router[🎯 Router Agent]
-        
-        Router -->|Técnico| TechAgent[🔧 Technical Agent]
-        Router -->|Comercial| SalesAgent[📈 Sales Agent]
-        Router -->|Financeiro| FinAgent[💰 Financial Agent]
-        
-        TechAgent -->|RAG Search| VectorDB[(🧠 Knowledge Base\npgvector)]
-        SalesAgent -->|Retention Logic| CRM[👥 CRM System]
-        FinAgent -->|Transactional| ERP[📊 ERP System]
+    subgraph "O Cérebro (Azure OpenAI)"
+        Router -->|Técnico| Tech[🔧 Technical Agent]
+        Router -->|Vendas| Sales[📈 Sales Agent]
+        Router -->|Financeiro| Fin[💰 Financial Agent]
     end
     
-    subgraph "Data & Infrastructure"
-        VectorDB <--> AzureOpenAI[☁️ Azure OpenAI\nEmbeddings + GPT-4o]
-        Router <--> Redis[(⚡ Session Cache)]
+    subgraph "A Memória (Data Layer)"
+        Tech <-->|RAG| VectorDB[(🗄️ pgvector)]
+        Sales <-->|Contexto| CRM[👥 CRM Data]
+        Router <-->|Sessão| Redis[(⚡ Azure Redis)]
     end
 ```
 
-### Componentes Chave
-1.  **Technical Agent (RAG-Powered)**: Utiliza `pgvector` para busca semântica em base de conhecimento técnica. Diagnostica falhas de internet/TV e abre chamados automaticamente.
-2.  **Sales Agent (Proactive)**: Implementa lógica de vendas agressiva ("Wolf of Wall Street" persona). Realiza upgrades em tempo real e aplica estratégias de retenção com descontos dinâmicos.
-3.  **Financial Agent**: Integrado ao ERP para emissão de boletos, desbloqueio em confiança e análise de faturas.
+### Stack Tecnológica
+*   **Backend**: Python 3.12 + FastAPI (AsyncIO puro para alta performance).
+*   **IA**: Azure OpenAI (GPT-4o, GPT-4o-mini, text-embedding-3-small).
+*   **Banco de Dados**: PostgreSQL 14 com extensão `vector` para busca semântica.
+*   **Frontend**: React 19 + Vite (Interface moderna e responsiva).
+*   **DevOps**: Docker & GitHub Actions (CI/CD automatizado).
 
 ---
 
-## 🛠 Stack Tecnológica Corporativa
+## 🚀 Como Rodar (Quickstart)
 
-### Backend & AI Core
-*   **Language**: Python 3.12+ (AsyncIO)
-*   **Framework**: FastAPI 0.121.2
-*   **LLM Orchestration**: Semantic Kernel / Native Azure OpenAI SDK
-*   **AI Models**: GPT-4o (Reasoning), GPT-4o-mini (Routing), text-embedding-3-small (Vectorization)
-*   **Database**: PostgreSQL 14+ com extensão `vector` (pgvector)
-*   **Cache**: Azure Redis (Session Management)
-
-### Frontend & UX
-*   **Framework**: React 19.2.0
-*   **Build System**: Vite
-*   **Styling**: CSS Modules (Scoped & Performant)
-
-### DevOps & Cloud
-*   **Cloud Provider**: Microsoft Azure (App Service, Database for PostgreSQL)
-*   **CI/CD**: GitHub Actions (Automated Testing & Deployment)
-*   **Containerization**: Docker & Docker Compose
-
----
-
-## 🚀 Guia de Implantação
+Quer ver a mágica acontecer? É simples.
 
 ### Pré-requisitos
-*   Docker Engine 24+
-*   Azure Subscription (com OpenAI Service habilitado)
+*   Docker & Docker Compose
+*   Uma pitada de curiosidade
 
-### 1. Configuração de Ambiente
-Clone o repositório e configure as variáveis de ambiente:
-```bash
-git clone https://github.com/Jcnok/central-atendimento-azure.git
-cd central-atendimento-azure
-cp backend/.env.example backend/.env
-```
+### Passo a Passo
+1.  **Clone o repositório:**
+    ```bash
+    git clone https://github.com/Jcnok/central-atendimento-azure.git
+    cd central-atendimento-azure
+    ```
 
-### 2. Execução Local (Docker)
-Inicie toda a stack (Frontend, Backend, Banco de Dados) com um único comando:
-```bash
-docker-compose up --build
-```
-*   **Frontend**: `http://localhost:3000`
-*   **API Documentation**: `http://localhost:8000/docs`
+2.  **Suba a aplicação (Modo Turbo):**
+    ```bash
+    docker-compose up --build
+    ```
 
-### 3. População da Base de Conhecimento (RAG)
-Para ativar a inteligência do Agente Técnico, popule o banco vetorial:
-```bash
-# Dentro do container ou venv
-python backend/scripts/seed_knowledge_base.py
-```
+3.  **Acesse:**
+    *   Frontend: `http://localhost:3000`
+    *   API Docs: `http://localhost:8000/docs`
 
----
-
-## 💼 Cenários de Negócio
-
-### 🔧 Suporte Técnico Inteligente
-> **Cliente**: "Minha internet caiu e a luz PON está piscando."
->
-> **Agente Técnico**:
-> 1.  Consulta a Base de Conhecimento via busca vetorial (`pgvector`).
-> 2.  Identifica "Rompimento de Fibra" baseado nos sintomas.
-> 3.  Verifica se já existe chamado aberto (`get_open_tickets`).
-> 4.  Se não, abre um ticket prioritário e informa o SLA de 4 horas.
-
-### 📈 Vendas e Retenção
-> **Cliente**: "Quero cancelar minha assinatura."
->
-> **Agente de Vendas**:
-> 1.  Analisa perfil e valor do cliente.
-> 2.  Aplica técnicas de contorno de objeções.
-> 3.  **Cartada Final**: Oferece automaticamente 20% de desconto por 6 meses (`apply_discount`).
-> 4.  Se aceito, aplica o desconto e atualiza o contrato em tempo real.
+4.  **Popule a Inteligência (RAG):**
+    ```bash
+    # Ensine o Agente Técnico a resolver problemas
+    python backend/scripts/seed_knowledge_base.py
+    ```
 
 ---
 
-## 🗺 Roadmap de Evolução
+## 🔮 O Futuro (Roadmap)
 
-*   [x] **Fase 1: Core Foundation** - Arquitetura Async, Docker, Integração Azure OpenAI.
-*   [x] **Fase 2: Advanced Intelligence** - RAG com pgvector, Agentes Especialistas (Sales/Tech).
-*   [ ] **Fase 3: Omnichannel Expansion** - Integração nativa com WhatsApp Business API e Teams.
-*   [ ] **Fase 4: Voice Interface** - Integração com Azure Speech Services para atendimento por voz.
-*   [ ] **Fase 5: Predictive Analytics** - Dashboards PowerBI para análise de sentimento e tendências.
+*   [x] **Fase 1: MVP** - Agentes Inteligentes e RAG funcional.
+*   [ ] **Fase 2: Omnichannel** - Integração com WhatsApp e Teams.
+*   [ ] **Fase 3: Voz** - Atendimento por voz com Azure Speech Services.
+*   [ ] **Fase 4: Analytics** - Dashboards de sentimento em tempo real no PowerBI.
 
 ---
-
-## 📄 Licença e Compliance
-
-Este software é propriedade intelectual confidencial. O uso é restrito aos termos da licença corporativa (MIT License para fins de demonstração).
 
 <div align="center">
-  <sub>Copyright © 2025 Jcnok Enterprise Solutions. All rights reserved.</sub>
+  <sub>Desenvolvido com 💙 para o Microsoft Innovation Challenge 2025</sub>
 </div>
