@@ -89,9 +89,11 @@ async def init_db():
     """
     try:
         async with engine.begin() as conn:
-            # Garante que a extensão vector existe
-            from sqlalchemy import text
-            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+            # Garante que a extensão vector existe (apenas Postgres)
+            if engine.dialect.name == "postgresql":
+                from sqlalchemy import text
+                await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+            
             await conn.run_sync(Base.metadata.create_all)
         logger.info("✅ Tabelas criadas/validadas com sucesso (Async)")
     except Exception as e:
