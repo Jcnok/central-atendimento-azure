@@ -21,7 +21,7 @@ services:
 
   # Serviço do Banco de Dados PostgreSQL
   db:
-    image: postgres:14-alpine
+    image: pgvector/pgvector:pg14
     container_name: central_atendimento_db
     volumes:
       - postgres_data:/var/lib/postgresql/data/

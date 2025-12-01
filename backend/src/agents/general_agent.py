@@ -60,6 +60,7 @@ class GeneralAgent:
     def __init__(self):
         self.kernel = Kernel()
         
+        self.is_configured = False
         if not settings.AZURE_OPENAI_ENDPOINT or not settings.AZURE_OPENAI_KEY:
             logger.error("Azure OpenAI credentials not found in General Agent.")
         else:
@@ -73,6 +74,7 @@ class GeneralAgent:
                         api_version=settings.AZURE_OPENAI_API_VERSION
                     )
                 )
+                self.is_configured = True
             except Exception as e:
                 logger.error(f"Failed to initialize AzureChatCompletion in General Agent: {e}")
         
@@ -92,6 +94,9 @@ class GeneralAgent:
 
         chat_history.add_user_message(message)
         
+        if not self.is_configured:
+            return "Erro de Configuração: As credenciais do Azure OpenAI não foram detectadas. Por favor, configure AZURE_OPENAI_KEY e AZURE_OPENAI_ENDPOINT nas configurações do App Service."
+
         try:
             chat_service = self.kernel.get_service(service_id="general")
         except Exception as e:

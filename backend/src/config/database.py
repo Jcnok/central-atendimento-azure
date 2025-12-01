@@ -79,6 +79,7 @@ Base = declarative_base()
 from src.models.user import User  # noqa
 from src.models.cliente import Cliente  # noqa
 from src.models.chamado import Chamado  # noqa
+from src.models.knowledge_base import KnowledgeBaseItem  # noqa
 
 
 async def init_db():
@@ -88,6 +89,9 @@ async def init_db():
     """
     try:
         async with engine.begin() as conn:
+            # Garante que a extensão vector existe
+            from sqlalchemy import text
+            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
             await conn.run_sync(Base.metadata.create_all)
         logger.info("✅ Tabelas criadas/validadas com sucesso (Async)")
     except Exception as e:

@@ -50,6 +50,7 @@ REGRAS:
         
         # Add Azure OpenAI service
         # Add Azure OpenAI service
+        self.is_configured = False
         if not settings.AZURE_OPENAI_ENDPOINT or not settings.AZURE_OPENAI_KEY:
             logger.error("Azure OpenAI credentials not found in Router Agent.")
             # We don't raise here to allow app to start, but routing will fail.
@@ -65,6 +66,7 @@ REGRAS:
                         api_version=settings.AZURE_OPENAI_API_VERSION
                     )
                 )
+                self.is_configured = True
             except Exception as e:
                 logger.error(f"Failed to initialize AzureChatCompletion in Router Agent: {e}")
         
@@ -81,6 +83,13 @@ REGRAS:
         Returns:
             Dict with agent name, confidence, and reasoning
         """
+        if not self.is_configured:
+            return {
+                "agent": "general_agent",
+                "confidence": 0.0,
+                "reasoning": "Erro de Configuração: Credenciais do Azure OpenAI não encontradas. Verifique AZURE_OPENAI_KEY e AZURE_OPENAI_ENDPOINT."
+            }
+
         try:
             # Build prompt with context if available
             user_prompt = f"Mensagem do cliente: {message}"
