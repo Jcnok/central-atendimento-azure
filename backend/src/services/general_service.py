@@ -185,6 +185,6 @@ Se o problema persistir e a luz LOS estiver vermelha, por favor, peça para fala
             }
 
     @staticmethod
-    async def simulate_sale(nome: str, email: str, plano_nome: str) -> str:
+    async def simulate_sale(nome: str, email: str, plano_nome: str, cpf: str, endereco: str) -> str:
         """DEPRECATED: Use SubscriptionService.create_subscription instead."""
         return "Método depreciado. Use create_subscription."

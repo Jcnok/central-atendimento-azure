@@ -19,9 +19,11 @@ class SessionManager:
     Falls back to in-memory dictionary if Redis is not configured.
     """
 
+    _local_cache = {}
+
     def __init__(self):
         self.redis_client = None
-        self._local_cache = {}
+        # self._local_cache is now shared via class attribute
         
         if settings.REDIS_HOST and redis:
             try:
