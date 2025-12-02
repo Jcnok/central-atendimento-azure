@@ -71,11 +71,30 @@ jobs:
       run: |
         cp backend/requirements.txt .
 
+    - name: Get Resource Group
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          rg=$(az webapp list --query "[?name=='${{ env.AZURE_WEBAPP_NAME }}'].resourceGroup" -o tsv)
+          echo "RESOURCE_GROUP=$rg" >> $GITHUB_ENV
+
+    - name: Stop Azure Web App
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          az webapp stop --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }}
+
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v3
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         slot-name: 'production'
-        package: . # Implanta o conteúdo do diretório raiz do repositório
-        clean: true # Limpa a implantação anterior para evitar conflitos
+        package: .
+        clean: true
         startup-command: 'cd backend && gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.main:app --bind 0.0.0.0:8000'
+
+    - name: Start Azure Web App
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          az webapp start --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }}
