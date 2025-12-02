@@ -3,7 +3,16 @@ name: Deploy to Azure App Service
 on:
   push:
     branches:
-      - master # Ou 'main', dependendo do nome da sua branch principal
+      - master
+      - main
+      - 'feat/*'
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+      - '*.md'
+      - '.gitignore'
+      - 'LICENSE'
+      - '**/*.md'
 
 env:
   AZURE_WEBAPP_NAME: app-central-atendimento-19055 # Nome do seu App Service
