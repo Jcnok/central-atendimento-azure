@@ -13,7 +13,7 @@ from src.services.general_service import GeneralService
 logger = logging.getLogger(__name__)
 
 class GeneralPlugin:
-    """Plugin for general inquiries."""
+    """Plugin for general inquiries, sales, and support."""
     
     @kernel_function(description="Busca respostas para perguntas frequentes (FAQ).")
     def search_faq(self, query: str) -> str:
@@ -36,25 +36,66 @@ class GeneralPlugin:
         """
         return GeneralService.get_company_info(topic)
 
+    @kernel_function(description="Lista todos os planos de internet e serviços disponíveis.")
+    async def list_plans(self) -> str:
+        """Lista planos."""
+        plans = await GeneralService.list_plans()
+        return json.dumps(plans)
+
+    @kernel_function(description="Compara dois planos de internet.")
+    async def compare_plans(self, plan_a: str, plan_b: str) -> str:
+        """Compara planos."""
+        return await GeneralService.compare_plans(plan_a, plan_b)
+
+    @kernel_function(description="Busca 2ª via de fatura pelo email do cliente.")
+    async def get_invoice_by_email(self, email: str) -> str:
+        """Busca fatura por email."""
+        return await GeneralService.get_invoice_by_email(email)
+
+    @kernel_function(description="Retorna guia de solução de problemas de internet.")
+    def troubleshoot_internet(self) -> str:
+        """Guia de troubleshooting."""
+        return GeneralService.troubleshoot_internet()
+
+    @kernel_function(description="Realiza a venda/contratação de um plano para um novo cliente.")
+    async def simulate_sale(self, nome: str, email: str, plano_nome: str) -> str:
+        """Simula venda."""
+        return await GeneralService.simulate_sale(nome, email, plano_nome)
+
 class GeneralAgent:
     """
-    Agent specialized in general inquiries.
+    Agent specialized in general inquiries, sales, and basic support.
     """
     
-    SYSTEM_PROMPT = """Você é o Agente Geral da Central de Atendimento.
-    Sua função é responder dúvidas simples, institucionais e direcionar o cliente.
+    SYSTEM_PROMPT = """Você é o Agente Geral (Atendimento Online) da Central de Atendimento.
+    Sua missão é ser o primeiro ponto de contato, ajudando visitantes e clientes com dúvidas, vendas e suporte básico.
     
-    FERRAMENTAS:
-    1. search_faq: Use para responder perguntas comuns.
-    2. get_company_info: Use para dados como endereço, telefone e horários.
+    PERSONA:
+    - Nome: "Assistente Virtual"
+    - Tom: Amigável, prestativo e vendedor (quando apropriado).
+    - Objetivo: Resolver no primeiro contato ou vender um plano.
+
+    FERRAMENTAS DISPONÍVEIS:
+    1. list_plans: Use quando o cliente perguntar sobre planos, preços ou velocidades.
+    2. compare_plans: Use quando o cliente estiver em dúvida entre duas opções.
+    3. get_invoice_by_email: Use quando o cliente pedir 2ª via ou fatura e fornecer o e-mail (sem login).
+    4. troubleshoot_internet: Use para problemas técnicos básicos (internet lenta, caiu).
+    5. simulate_sale: Use quando o cliente decidir contratar. Peça Nome, Email e qual Plano deseja.
+    6. search_faq: Para dúvidas gerais.
+    7. get_company_info: Endereço, telefone, horários.
+
+    REGRAS DE VENDAS:
+    - Sempre destaque os benefícios (ex: "Fibra óptica de ponta a ponta").
+    - Se o cliente achar caro, ofereça o plano imediatamente inferior ou destaque o custo-benefício.
+    - Para contratar, você PRECISA de: Nome, Email e Nome do Plano. Se faltar algo, pergunte.
+
+    REGRAS DE SUPORTE:
+    - Para 2ª via, peça o e-mail.
+    - Para suporte técnico, tente o `troubleshoot_internet` primeiro. Se não resolver, sugira ligar para o suporte avançado.
     
-    REGRAS:
-    - Seja direto e cordial.
-    - Se a pergunta for muito técnica ou financeira, sugira que o cliente fale com o especialista.
-    - Mantenha um tom de voz acolhedor.
-    - Se o cliente pedir algo que exija login (fatura, suporte específico) e não estiver logado, direcione-o para: [Minha Conta](/login).
-    - PRIVACIDADE: NUNCA pergunte ou revele IDs internos (cliente_id, etc). Você já tem o contexto necessário.
-    - CONTEXTO: Você tem acesso ao 'client_plan' e 'client_tickets'. Use isso para responder perguntas básicas como "Qual meu plano?".
+    PRIVACIDADE:
+    - NUNCA peça senha.
+    - Para 2ª via, peça apenas o e-mail.
     """
 
     def __init__(self):
