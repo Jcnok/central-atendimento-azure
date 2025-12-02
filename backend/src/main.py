@@ -99,15 +99,22 @@ app.add_middleware(
 # ==================== ROTAS ====================
 
 
-@app.get("/", tags=["Health"])
-async def health_check():
-    """Health check da API"""
-    return {
-        "status": "ok",
-        "servico": "Central de Atendimento Automática",
-        "versao": "1.0.0",
-        "ambiente": "Azure App Service",
-    }
+@app.get("/", tags=["Frontend"])
+async def serve_root():
+    """Serve o arquivo index.html do frontend (SPA)"""
+    # Verifica o caminho do frontend (local ou container)
+    frontend_dist = "frontend/dist"
+    if not os.path.exists(frontend_dist) and os.path.exists("../frontend/dist"):
+        frontend_dist = "../frontend/dist"
+    
+    index_path = f"{frontend_dist}/index.html"
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    
+    return JSONResponse(
+        status_code=404, 
+        content={"message": "Frontend não encontrado. Execute 'npm run build' na pasta frontend."}
+    )
 
 
 @app.get("/health", tags=["Health"])
