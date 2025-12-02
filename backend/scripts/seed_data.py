@@ -2,7 +2,8 @@ import asyncio
 import logging
 import sys
 import os
-from datetime import date, timedelta
+import random
+from datetime import date, timedelta, datetime
 
 # Add project root to python path
 sys.path.append(os.getcwd())
@@ -17,27 +18,33 @@ from src.utils.security import get_password_hash
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Listas de nomes para gerar dados realistas
+NOMES = ["João", "Maria", "Pedro", "Ana", "Lucas", "Julia", "Marcos", "Fernanda", "Gabriel", "Larissa", "Rafael", "Camila", "Bruno", "Amanda", "Thiago", "Beatriz", "Felipe", "Mariana", "Rodrigo", "Patricia"]
+SOBRENOMES = ["Silva", "Santos", "Oliveira", "Souza", "Rodrigues", "Ferreira", "Almeida", "Pereira", "Lima", "Gomes", "Costa", "Ribeiro", "Martins", "Carvalho", "Alves", "Monteiro", "Mendes", "Barros", "Freitas", "Barbosa"]
+
+def gerar_nome_completo():
+    return f"{random.choice(NOMES)} {random.choice(SOBRENOMES)}"
+
 async def seed():
-    logger.info("🌱 Iniciando Seeding...")
+    logger.info("🌱 Iniciando Seeding Massivo (100+ Clientes)...")
     
     # Recreate tables (Force Cascade)
     async with engine.begin() as conn:
-        # Disable foreign key checks to allow dropping in any order (for Postgres this is different, but CASCADE works)
-        # For PostgreSQL, we can drop the schema public and recreate it, or drop tables with CASCADE.
-        # Let's try dropping tables explicitly with CASCADE if drop_all fails.
-        
         from sqlalchemy import text
-        # Get all table names
-        # This is a bit hacky but ensures we clean up everything
         tables = ["historico_atendimentos", "pagamentos", "faturas", "chamados", "contratos", "clientes", "planos", "atendentes", "users", "metricas"]
         for table in tables:
             await conn.execute(text(f"DROP TABLE IF EXISTS {table} CASCADE"))
+            
+        # Garante que a extensão vector existe (apenas Postgres)
+        if engine.dialect.name == "postgresql":
+            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
             
         await conn.run_sync(Base.metadata.create_all)
     
     async with AsyncSessionLocal() as session:
         # 1. Create Admin User
         admin = User(
+            username="admin",
             email="admin@central.com",
             hashed_password=get_password_hash("admin"),
             is_active=True,
@@ -57,95 +64,76 @@ async def seed():
         
         # 3. Create Plans
         planos = [
-            Plano(nome="Internet Fibra 500MB", descricao="Internet ultra rápida para sua casa", velocidade="500MB", preco=120.00, tipo="internet"),
-            Plano(nome="Internet Fibra 1GB", descricao="Máxima velocidade para gamers e streamers", velocidade="1GB", preco=200.00, tipo="internet"),
-            Plano(nome="Móvel 5G Ilimitado", descricao="Dados ilimitados e ligações para todo Brasil", velocidade="5G", preco=89.90, tipo="movel"),
-            Plano(nome="TV 4K Premium", descricao="Mais de 200 canais em 4K", velocidade="N/A", preco=150.00, tipo="tv"),
+            Plano(nome="Internet Fibra 500MB", descricao="Internet ultra rápida", velocidade="500MB", preco=120.00, tipo="internet"),
+            Plano(nome="Internet Fibra 1GB", descricao="Máxima velocidade", velocidade="1GB", preco=200.00, tipo="internet"),
+            Plano(nome="Móvel 5G Ilimitado", descricao="Dados ilimitados", velocidade="5G", preco=89.90, tipo="movel"),
+            Plano(nome="TV 4K Premium", descricao="200 canais em 4K", velocidade="N/A", preco=150.00, tipo="tv"),
         ]
         session.add_all(planos)
-        await session.flush() # To get IDs
+        await session.flush()
         
-        # 4. Create Clients
+        # 4. Create 100 Clients
         clientes = []
-        for i in range(1, 6):
+        for i in range(1, 101):
+            nome = gerar_nome_completo()
             cliente = Cliente(
-                nome=f"Cliente {i}",
-                email=f"cliente{i}@email.com",
-                hashed_password=get_password_hash("123456"), # Default password
-                telefone=f"1199999000{i}",
-                endereco=f"Rua Exemplo, {100+i}, São Paulo - SP",
-                canal_preferido="site"
+                nome=nome,
+                email=f"{nome.lower().replace(' ', '.')}{i}@email.com",
+                hashed_password=get_password_hash("123456"),
+                telefone=f"1199999{str(i).zfill(4)}",
+                endereco=f"Rua Exemplo, {i}, São Paulo - SP",
+                canal_preferido=random.choice(["whatsapp", "site", "email"])
             )
             clientes.append(cliente)
         session.add_all(clientes)
         await session.flush()
         
-        # 5. Create Contracts & Faturas
+        # 5. Create Contracts & Faturas & Chamados
         for cliente in clientes:
-            # Give each client a random plan (or specifically the first one for simplicity)
-            plano = planos[0] 
+            # Random Plan
+            plano = random.choice(planos)
+            
+            # Churn Simulation (approx 5% cancelled)
+            status_contrato = "cancelado" if random.random() < 0.05 else "ativo"
+            
             contrato = Contrato(
                 cliente_id=cliente.id,
                 plano_id=plano.plano_id,
-                data_inicio=date.today() - timedelta(days=365),
-                status="ativo",
+                data_inicio=date.today() - timedelta(days=random.randint(30, 700)),
+                status=status_contrato,
                 tipo_servico=plano.tipo
             )
             session.add(contrato)
             await session.flush()
             
-            # Create Invoices (Last 3 months)
-            for m in range(3):
-                data_emissao = date.today() - timedelta(days=30 * (m+1))
-                data_vencimento = data_emissao + timedelta(days=10)
-                status = "pago" if m > 0 else "pendente" # Oldest are paid, newest is pending
-                
-                fatura = Fatura(
-                    contrato_id=contrato.contrato_id,
-                    data_emissao=data_emissao,
-                    data_vencimento=data_vencimento,
-                    valor=plano.preco,
-                    status=status
-                )
-                session.add(fatura)
-                await session.flush()
-                
-                if status == "pago":
-                    pagamento = Pagamento(
-                        fatura_id=fatura.fatura_id,
-                        data_pagamento=data_vencimento, # Paid on due date
-                        valor_pago=plano.preco,
-                        forma_pagamento="pix"
+            # Create Tickets (Chamados)
+            # 70% of clients have at least one ticket
+            if random.random() < 0.7:
+                num_tickets = random.randint(1, 3)
+                for _ in range(num_tickets):
+                    # AI Resolution Simulation
+                    # 60% resolved by AI, 40% escalated
+                    is_ai_resolved = random.random() < 0.6
+                    
+                    status_chamado = "resolvido" if is_ai_resolved else random.choice(["aberto", "em_andamento"])
+                    canal = "chat_ia" if random.random() < 0.8 else "whatsapp"
+                    
+                    chamado = Chamado(
+                        protocolo=gerar_protocolo(),
+                        cliente_id=cliente.id,
+                        canal=canal,
+                        mensagem="Problema simulado para KPI.",
+                        status=status_chamado,
+                        prioridade=random.choice(["baixa", "media", "alta"]),
+                        categoria=random.choice(["tecnico", "financeiro", "vendas"]),
+                        encaminhado_para_humano=not is_ai_resolved,
+                        data_criacao=datetime.now() - timedelta(days=random.randint(0, 30)),
+                        data_fechamento=datetime.now() if status_chamado == "resolvido" else None
                     )
-                    session.add(pagamento)
-
-        # 6. Create Tickets (Chamados)
-        chamado_aberto = Chamado(
-            protocolo=gerar_protocolo(),
-            cliente_id=clientes[0].id,
-            canal="site",
-            mensagem="Minha internet está lenta.",
-            status="aberto",
-            prioridade="alta",
-            categoria="tecnico"
-        )
-        session.add(chamado_aberto)
-        
-        chamado_fechado = Chamado(
-            protocolo=gerar_protocolo(),
-            cliente_id=clientes[0].id,
-            canal="whatsapp",
-            mensagem="Quero a segunda via do boleto.",
-            status="resolvido",
-            prioridade="baixa",
-            categoria="financeiro",
-            resolucao="Boleto enviado por email.",
-            data_fechamento=date.today()
-        )
-        session.add(chamado_fechado)
+                    session.add(chamado)
 
         await session.commit()
-        logger.info("✅ Seeding concluído com sucesso!")
+        logger.info("✅ Seeding Massivo concluído com sucesso!")
 
 if __name__ == "__main__":
     asyncio.run(seed())

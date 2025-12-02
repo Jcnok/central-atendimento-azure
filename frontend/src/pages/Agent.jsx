@@ -1,11 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import styles from './Dashboard.module.css';
+import ReactMarkdown from 'react-markdown';
 
 export default function Agent() {
     const { token } = useAuth();
-    const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
+    const [messages, setMessages] = useState([
+        { role: 'assistant', content: 'Olá! Sou o Agente Admin. Posso analisar dados e gerar relatórios para você. Como posso ajudar?' }
+    ]);
     const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef(null);
 
@@ -27,35 +30,23 @@ export default function Agent() {
         setLoading(true);
 
         try {
-            const response = await fetch('/api/agent/', {
+            const res = await fetch('/api/agent/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ query: userMessage.content })
+                body: JSON.stringify({
+                    query: input,
+                    agent_type: 'crm'
+                })
             });
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                const errorMessage = errorData.detail || errorData.message || `Erro ${response.status}: ${response.statusText}`;
-                throw new Error(errorMessage);
-            }
-
-            const data = await response.json();
-
-            const agentMessage = {
-                role: 'agent',
-                content: data.response || "O agente retornou uma resposta vazia."
-            };
-
-            setMessages(prev => [...prev, agentMessage]);
+            const data = await res.json();
+            setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
         } catch (error) {
-            console.error("Erro ao consultar agente:", error);
-            setMessages(prev => [...prev, {
-                role: 'agent',
-                content: `Erro: ${error.message}`
-            }]);
+            console.error("Error calling agent:", error);
+            setMessages(prev => [...prev, { role: 'assistant', content: "Desculpe, tive um erro ao processar sua solicitação." }]);
         } finally {
             setLoading(false);
         }
@@ -81,7 +72,7 @@ export default function Agent() {
                     flexDirection: 'column',
                     gap: '1.5rem'
                 }}>
-                    {messages.length === 0 && (
+                    {messages.length <= 1 && (
                         <div style={{
                             textAlign: 'center',
                             color: 'var(--text-secondary)',
@@ -96,7 +87,7 @@ export default function Agent() {
                                 flexWrap: 'wrap',
                                 marginTop: '1rem'
                             }}>
-                                {['Quantos clientes temos?', 'Liste os últimos chamados', 'Qual o faturamento deste mês?'].map((ex, i) => (
+                                {['Qual a economia total com IA?', 'Gere um relatório gerencial', 'Qual a taxa de churn atual?', 'Compare o custo IA vs Humano'].map((ex, i) => (
                                     <button
                                         key={i}
                                         onClick={() => setInput(ex)}
@@ -127,9 +118,9 @@ export default function Agent() {
                             padding: '1rem 1.5rem',
                             borderRadius: '12px',
                             borderTopRightRadius: msg.role === 'user' ? '2px' : '12px',
-                            borderTopLeftRadius: msg.role === 'agent' ? '2px' : '12px',
+                            borderTopLeftRadius: msg.role === 'assistant' ? '2px' : '12px',
                             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                            border: msg.role === 'agent' ? '1px solid var(--glass-border)' : 'none'
+                            border: msg.role === 'assistant' ? '1px solid var(--glass-border)' : 'none'
                         }}>
                             <div style={{
                                 fontWeight: 'bold',
@@ -140,7 +131,7 @@ export default function Agent() {
                                 {msg.role === 'user' ? 'Você' : 'Agente CRM'}
                             </div>
                             <div style={{ lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
-                                {msg.role === 'agent' ? (
+                                {msg.role === 'assistant' ? (
                                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                                 ) : (
                                     msg.content
@@ -186,7 +177,7 @@ export default function Agent() {
                             className="btn-primary"
                             style={{ padding: '0 24px' }}
                         >
-                            Enviar
+                            {loading ? '...' : 'Enviar'}
                         </button>
                     </form>
                 </div>
