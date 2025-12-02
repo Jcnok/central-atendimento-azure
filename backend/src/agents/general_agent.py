@@ -9,6 +9,7 @@ from semantic_kernel.functions import kernel_function
 
 from src.config.settings import settings
 from src.services.general_service import GeneralService
+from src.services.subscription_service import SubscriptionService
 
 logger = logging.getLogger(__name__)
 
@@ -57,10 +58,17 @@ class GeneralPlugin:
         """Guia de troubleshooting."""
         return GeneralService.troubleshoot_internet()
 
-    @kernel_function(description="Realiza a venda/contratação de um plano para um novo cliente.")
-    async def simulate_sale(self, nome: str, email: str, plano_nome: str) -> str:
-        """Simula venda."""
-        return await GeneralService.simulate_sale(nome, email, plano_nome)
+    @kernel_function(description="Verifica status do cliente pelo email (se já existe, plano atual, faturas).")
+    async def check_client_status(self, email: str) -> str:
+        """Verifica cliente."""
+        result = await GeneralService.get_client_summary_by_email(email)
+        return json.dumps(result)
+
+    @kernel_function(description="Realiza a contratação completa (Cliente + Contrato + Boleto).")
+    async def create_subscription(self, nome: str, email: str, plano_nome: str, telefone: str = "11999999999") -> str:
+        """Cria assinatura."""
+        result = await SubscriptionService.create_subscription(nome, email, plano_nome, telefone)
+        return json.dumps(result)
 
 class GeneralAgent:
     """
@@ -72,30 +80,35 @@ class GeneralAgent:
     
     PERSONA:
     - Nome: "Assistente Virtual"
-    - Tom: Amigável, prestativo e vendedor (quando apropriado).
-    - Objetivo: Resolver no primeiro contato ou vender um plano.
+    - Tom: Profissional, eficiente e focado em resolver.
+    - Objetivo: Vender planos ou resolver problemas no primeiro contato.
 
-    FERRAMENTAS DISPONÍVEIS:
-    1. list_plans: Use quando o cliente perguntar sobre planos, preços ou velocidades.
-    2. compare_plans: Use quando o cliente estiver em dúvida entre duas opções.
-    3. get_invoice_by_email: Use quando o cliente pedir 2ª via ou fatura e fornecer o e-mail (sem login).
-    4. troubleshoot_internet: Use para problemas técnicos básicos (internet lenta, caiu).
-    5. simulate_sale: Use quando o cliente decidir contratar. Peça Nome, Email e qual Plano deseja.
-    6. search_faq: Para dúvidas gerais.
-    7. get_company_info: Endereço, telefone, horários.
+    FERRAMENTAS OBRIGATÓRIAS:
+    1. `list_plans`: USE SEMPRE que perguntarem "quais planos", "preços" ou "velocidades". NUNCA invente planos. Use APENAS o que retornar desta função.
+    2. `check_client_status`: USE SEMPRE que o cliente disser "já sou cliente", "meu email é..." ou pedir algo que exija cadastro.
+    3. `create_subscription`: USE APENAS quando o cliente confirmar explicitamente a contratação e fornecer Nome, Email e Plano.
+    4. `get_invoice_by_email`: Para 2ª via rápida.
+    5. `troubleshoot_internet`: Para suporte técnico básico.
 
-    REGRAS DE VENDAS:
-    - Sempre destaque os benefícios (ex: "Fibra óptica de ponta a ponta").
-    - Se o cliente achar caro, ofereça o plano imediatamente inferior ou destaque o custo-benefício.
-    - Para contratar, você PRECISA de: Nome, Email e Nome do Plano. Se faltar algo, pergunte.
+    FLUXO DE VENDAS (NOVO CLIENTE):
+    1. O cliente demonstra interesse.
+    2. Você CHAMA `list_plans` e apresenta as opções.
+    3. O cliente escolhe um plano.
+    4. Você pede os dados: "Para prosseguir, preciso do seu Nome Completo e E-mail."
+    5. O cliente fornece os dados.
+    6. Você CHAMA `create_subscription(nome, email, plano)`.
+    7. Você apresenta o resultado: "Sucesso! Seu boleto é [link] e sua senha provisória é [senha]."
 
-    REGRAS DE SUPORTE:
-    - Para 2ª via, peça o e-mail.
-    - Para suporte técnico, tente o `troubleshoot_internet` primeiro. Se não resolver, sugira ligar para o suporte avançado.
-    
-    PRIVACIDADE:
-    - NUNCA peça senha.
-    - Para 2ª via, peça apenas o e-mail.
+    FLUXO DE CLIENTE EXISTENTE:
+    1. O cliente diz que já tem cadastro ou pede suporte.
+    2. Você pede o e-mail: "Por favor, informe seu e-mail de cadastro."
+    3. Você CHAMA `check_client_status(email)`.
+    4. Com base no retorno, você informa o plano atual ou faturas pendentes.
+
+    REGRAS CRÍTICAS:
+    - ALUCINAÇÃO ZERO: Se `list_plans` retornar apenas "Plano A", você só vende "Plano A". Não invente "Plano B".
+    - SEGURANÇA: Nunca peça senha. Nunca mostre dados sensíveis (CPF, Endereço) no chat.
+    - PROATIVIDADE: Se `check_client_status` disser que o cliente não existe, ofereça planos imediatamente.
     """
 
     def __init__(self):
@@ -148,7 +161,7 @@ class GeneralAgent:
         from semantic_kernel.connectors.ai.function_choice_behavior import FunctionChoiceBehavior
         
         execution_settings = AzureChatPromptExecutionSettings(
-            temperature=0.5,
+            temperature=0.3, # Lower temperature for stricter adherence
             function_choice_behavior=FunctionChoiceBehavior.Auto()
         )
         

@@ -143,68 +143,48 @@ class GeneralService:
 Se o problema persistir e a luz LOS estiver vermelha, por favor, peça para falar com o **Suporte Técnico**."""
 
     @staticmethod
-    async def simulate_sale(nome: str, email: str, plano_nome: str) -> str:
-        """Simula uma venda criando cliente, contrato e fatura."""
+    async def get_client_summary_by_email(email: str) -> Dict[str, any]:
+        """
+        Retorna resumo do cliente para o agente (sem expor dados sensíveis).
+        """
         async with AsyncSessionLocal() as session:
-            try:
-                # 1. Find Plan
-                result_plano = await session.execute(select(Plano).filter(Plano.nome.ilike(f"%{plano_nome}%")))
+            # Busca cliente
+            result = await session.execute(select(Cliente).filter(Cliente.email == email))
+            cliente = result.scalars().first()
+            
+            if not cliente:
+                return {"found": False, "message": "Cliente não encontrado."}
+
+            # Busca contrato ativo
+            result_contrato = await session.execute(
+                select(Contrato).filter(Contrato.cliente_id == cliente.id, Contrato.status == 'ativo')
+            )
+            contrato = result_contrato.scalars().first()
+            
+            plano_info = "Nenhum plano ativo"
+            if contrato:
+                result_plano = await session.execute(select(Plano).filter(Plano.plano_id == contrato.plano_id))
                 plano = result_plano.scalars().first()
-                
-                if not plano:
-                    return f"Desculpe, não encontrei o plano '{plano_nome}'. Temos: Fibra 500MB, Fibra 1GB, Móvel 5G."
+                if plano:
+                    plano_info = f"{plano.nome} ({plano.velocidade})"
 
-                # 2. Check if client exists
-                result_cliente = await session.execute(select(Cliente).filter(Cliente.email == email))
-                existing_client = result_cliente.scalars().first()
-                
-                if existing_client:
-                    return "Já existe um cliente com este e-mail. Por favor, faça login para contratar novas linhas."
+            # Busca faturas pendentes
+            result_faturas = await session.execute(
+                select(Fatura)
+                .join(Contrato)
+                .filter(Contrato.cliente_id == cliente.id, Fatura.status == 'pendente')
+            )
+            faturas_pendentes = len(result_faturas.scalars().all())
 
-                # 3. Create Client
-                novo_cliente = Cliente(
-                    nome=nome,
-                    email=email,
-                    hashed_password=get_password_hash("123mudar"), # Default password
-                    telefone="11999999999", # Placeholder
-                    endereco="Endereço não informado",
-                    canal_preferido="chat_ia"
-                )
-                session.add(novo_cliente)
-                await session.flush() # Get ID
+            return {
+                "found": True,
+                "nome": cliente.nome,
+                "plano_atual": plano_info,
+                "faturas_pendentes": faturas_pendentes,
+                "message": f"Cliente encontrado: {cliente.nome}. Plano: {plano_info}. Faturas em aberto: {faturas_pendentes}."
+            }
 
-                # 4. Create Contract
-                contrato = Contrato(
-                    cliente_id=novo_cliente.id,
-                    plano_id=plano.plano_id,
-                    data_inicio=date.today(),
-                    status="ativo",
-                    tipo_servico=plano.tipo
-                )
-                session.add(contrato)
-                await session.flush()
-
-                # 5. Create Invoice
-                fatura = Fatura(
-                    contrato_id=contrato.contrato_id,
-                    data_emissao=date.today(),
-                    data_vencimento=date.today() + timedelta(days=5),
-                    valor=plano.preco,
-                    status="pendente"
-                )
-                session.add(fatura)
-                
-                await session.commit()
-                
-                return f"""🎉 **Parabéns, {nome}!** Contratação realizada com sucesso!
-                
-**Plano:** {plano.nome} ({plano.velocidade})
-**Valor:** R$ {float(plano.preco):.2f}/mês
-**Instalação:** Agendada para amanhã, horário comercial.
-
-Seu boleto de adesão já foi gerado: [Boleto]({fatura.fatura_id}.pdf).
-Sua senha provisória de acesso ao portal é: `123mudar`."""
-
-            except Exception as e:
-                await session.rollback()
-                return f"Erro ao processar contratação: {str(e)}"
+    @staticmethod
+    async def simulate_sale(nome: str, email: str, plano_nome: str) -> str:
+        """DEPRECATED: Use SubscriptionService.create_subscription instead."""
+        return "Método depreciado. Use create_subscription."
