@@ -99,3 +99,4 @@ yarn.lock
 .env.test
 .env.agents
 .env.agents
+prompt.md
