@@ -65,9 +65,9 @@ class GeneralPlugin:
         return json.dumps(result)
 
     @kernel_function(description="Realiza a contratação completa (Cliente + Contrato + Boleto).")
-    async def create_subscription(self, nome: str, email: str, plano_nome: str, telefone: str = "11999999999") -> str:
+    async def create_subscription(self, nome: str, email: str, plano_nome: str, cpf: str, endereco: str, telefone: str = "11999999999") -> str:
         """Cria assinatura."""
-        result = await SubscriptionService.create_subscription(nome, email, plano_nome, telefone)
+        result = await SubscriptionService.create_subscription(nome, email, plano_nome, cpf, endereco, telefone)
         return json.dumps(result)
 
 class GeneralAgent:
@@ -86,7 +86,7 @@ class GeneralAgent:
     FERRAMENTAS OBRIGATÓRIAS:
     1. `list_plans`: USE SEMPRE que perguntarem "quais planos", "preços" ou "velocidades". NUNCA invente planos. Use APENAS o que retornar desta função.
     2. `check_client_status`: USE SEMPRE que o cliente disser "já sou cliente", "meu email é..." ou pedir algo que exija cadastro.
-    3. `create_subscription`: USE APENAS quando o cliente confirmar explicitamente a contratação e fornecer Nome, Email e Plano.
+    3. `create_subscription`: USE APENAS quando o cliente confirmar explicitamente a contratação e fornecer TODOS os dados (Nome, Email, CPF, Endereço, Plano).
     4. `get_invoice_by_email`: Para 2ª via rápida.
     5. `troubleshoot_internet`: Para suporte técnico básico.
 
@@ -94,9 +94,9 @@ class GeneralAgent:
     1. O cliente demonstra interesse.
     2. Você CHAMA `list_plans` e apresenta as opções.
     3. O cliente escolhe um plano.
-    4. Você pede os dados: "Para prosseguir, preciso do seu Nome Completo e E-mail."
+    4. Você pede os dados: "Para prosseguir, preciso do seu Nome Completo, CPF, Endereço, Telefone e E-mail."
     5. O cliente fornece os dados.
-    6. Você CHAMA `create_subscription(nome, email, plano)`.
+    6. Você CHAMA `create_subscription(nome, email, plano, cpf, endereco, telefone)`.
     7. Você apresenta o resultado: "Sucesso! Seu boleto é [link] e sua senha provisória é [senha]."
 
     FLUXO DE CLIENTE EXISTENTE:
@@ -106,9 +106,10 @@ class GeneralAgent:
     4. Com base no retorno, você informa o plano atual ou faturas pendentes.
 
     REGRAS CRÍTICAS:
-    - ALUCINAÇÃO ZERO: Se `list_plans` retornar apenas "Plano A", você só vende "Plano A". Não invente "Plano B".
-    - SEGURANÇA: Nunca peça senha. Nunca mostre dados sensíveis (CPF, Endereço) no chat.
-    - PROATIVIDADE: Se `check_client_status` disser que o cliente não existe, ofereça planos imediatamente.
+    - **NUNCA PEÇA ID DE CLIENTE**: Você não precisa de autenticação prévia. O e-mail é sua chave de busca.
+    - **NUNCA SIMULE CADASTRO**: Não diga "criei um ticket" ou "já está valendo" sem chamar `create_subscription`.
+    - **DADOS COMPLETOS**: Para `create_subscription`, você PRECISA de Nome, Email, CPF, Endereço e Plano. Se faltar algo, pergunte.
+    - **ALUCINAÇÃO ZERO**: Se `list_plans` retornar apenas "Plano A", você só vende "Plano A".
     """
 
     def __init__(self):
@@ -144,7 +145,20 @@ class GeneralAgent:
         chat_history.add_system_message(self.SYSTEM_PROMPT)
         
         if context:
-             chat_history.add_system_message(f"Contexto do Cliente: {json.dumps(context, default=str)}")
+            # Add structured history if available
+            history_list = context.get("chat_history", [])
+            for msg in history_list:
+                role = msg.get("role")
+                content = msg.get("content")
+                if role == "user":
+                    chat_history.add_user_message(content)
+                elif role == "assistant":
+                    chat_history.add_assistant_message(content)
+            
+            # Add other context info as system message
+            other_context = {k: v for k, v in context.items() if k != "chat_history"}
+            if other_context:
+                chat_history.add_system_message(f"Contexto do Cliente: {json.dumps(other_context, default=str)}")
 
         chat_history.add_user_message(message)
         
@@ -161,7 +175,7 @@ class GeneralAgent:
         from semantic_kernel.connectors.ai.function_choice_behavior import FunctionChoiceBehavior
         
         execution_settings = AzureChatPromptExecutionSettings(
-            temperature=0.3, # Lower temperature for stricter adherence
+            temperature=0.2, # Lower temperature for even stricter adherence
             function_choice_behavior=FunctionChoiceBehavior.Auto()
         )
         

@@ -14,6 +14,8 @@ class SubscriptionService:
         nome: str, 
         email: str, 
         plano_nome: str, 
+        cpf: str,
+        endereco: str,
         telefone: str = "11999999999", 
         canal: str = "chat_ia"
     ) -> Dict[str, any]:
@@ -46,7 +48,8 @@ class SubscriptionService:
                     email=email,
                     hashed_password=get_password_hash("123mudar"),
                     telefone=telefone,
-                    endereco="Endereço não informado",
+                    endereco=endereco,
+                    cpf=cpf,
                     canal_preferido=canal
                 )
                 session.add(novo_cliente)
