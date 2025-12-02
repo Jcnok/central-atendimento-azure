@@ -19,7 +19,7 @@ client = TestClient(app)
 
 class TestHealthCheck:
     def test_health_check_root(self, db_session):
-        response = client.get("/")
+        response = client.get("/health")
         assert response.status_code == 200
         assert response.json()["status"] == "ok"
 
