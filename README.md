@@ -43,6 +43,21 @@ Diferente de sistemas baseados em regras, nossa arquitetura utiliza **Agentes Au
 *   **Superpoder**: Memória Infinita. Ele leu todos os manuais técnicos da empresa. Se sua luz PON está piscando, ele sabe exatamente o que é, porque consultou a base de conhecimento vetorial em milissegundos.
 *   **Tech**: **RAG (Retrieval-Augmented Generation)** com `pgvector` e Azure OpenAI Embeddings.
 
+#### 3. 🦸‍♂️ O Agente Admin ("The Super Hero")
+*   **Personalidade**: Visionário, analítico e focado em eficiência.
+*   **Superpoder**: Transformar dados brutos em insights de negócio. Ele calcula o ROI da IA em tempo real, monitora o Churn e gera relatórios gerenciais instantâneos.
+*   **Tech**: SQL Generation e Análise de Dados Avançada.
+
+---
+
+## 📊 Dashboard Administrativo 2.0
+
+Não adianta ter IA se você não vê o resultado. Nosso novo Dashboard oferece:
+
+*   **KPIs em Tempo Real**: Churn Rate, Economia Gerada (R$), Margem de Lucro e Taxa de Resolução por IA.
+*   **Visualização de Dados**: Gráficos interativos de evolução de chamados e distribuição por canal.
+*   **UX Premium**: Tema Claro/Escuro e suporte Multi-idioma (PT, EN, ES).
+
 ---
 
 ## 🏛 Sob o Capô (Architecture)
@@ -52,11 +67,13 @@ Construído sobre a robustez do **Microsoft Azure**, nossa arquitetura é modula
 ```mermaid
 graph TD
     User[👤 Cliente] -->|Chat| Router[🧠 Router Agent]
+    Admin[👔 Gestor] -->|Dashboard| SQL[🦸‍♂️ Admin Agent]
     
     subgraph "O Cérebro (Azure OpenAI)"
         Router -->|Técnico| Tech[🔧 Technical Agent]
         Router -->|Vendas| Sales[📈 Sales Agent]
         Router -->|Financeiro| Fin[💰 Financial Agent]
+        SQL -->|Insights| DB[(🗄️ Database)]
     end
     
     subgraph "A Memória (Data Layer)"
@@ -99,10 +116,13 @@ Quer ver a mágica acontecer? É simples.
     *   Frontend: `http://localhost:3000`
     *   API Docs: `http://localhost:8000/docs`
 
-4.  **Popule a Inteligência (RAG):**
+4.  **Popule a Inteligência e Dados (RAG + Mock Data):**
     ```bash
-    # Ensine o Agente Técnico a resolver problemas
+    # 1. Ensine o Agente Técnico (RAG)
     python backend/scripts/seed_knowledge_base.py
+    
+    # 2. Gere 100+ Clientes e Histórico (Dashboard)
+    python backend/scripts/seed_data.py
     ```
 
 ---
@@ -110,9 +130,9 @@ Quer ver a mágica acontecer? É simples.
 ## 🔮 O Futuro (Roadmap)
 
 *   [x] **Fase 1: MVP** - Agentes Inteligentes e RAG funcional.
-*   [ ] **Fase 2: Omnichannel** - Integração com WhatsApp e Teams.
-*   [ ] **Fase 3: Voz** - Atendimento por voz com Azure Speech Services.
-*   [ ] **Fase 4: Analytics** - Dashboards de sentimento em tempo real no PowerBI.
+*   [x] **Fase 2: Gestão** - Dashboard Administrativo e KPIs de Negócio.
+*   [ ] **Fase 3: Omnichannel** - Integração com WhatsApp e Teams.
+*   [ ] **Fase 4: Voz** - Atendimento por voz com Azure Speech Services.
 
 ---
 
